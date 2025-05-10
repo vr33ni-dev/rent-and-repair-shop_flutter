@@ -1,1 +1,4 @@
-# rent-and-repair-shop_flutter
+# Rent and Repair Shop - Flutter
+
+A Flutter project.
+
