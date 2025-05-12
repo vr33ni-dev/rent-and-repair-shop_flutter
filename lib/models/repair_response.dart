@@ -1,15 +1,19 @@
 class RepairResponse {
   final int repairId;
   final int surfboardId;
+  final int customerId;
+  final int? rentalId;
   final String surfboardName;
   final String customerName;
   final String issue;
   final String status;
-  final String createdAt;
+  final String? createdAt;
 
   RepairResponse({
     required this.repairId,
     required this.surfboardId,
+    required this.customerId,
+    required this.rentalId,
     required this.surfboardName,
     required this.customerName,
     required this.issue,
@@ -21,6 +25,8 @@ class RepairResponse {
     return RepairResponse(
       repairId: json['repairId'],
       surfboardId: json['surfboardId'],
+      customerId: json['customerId'],
+      rentalId: json['rentalId'],
       surfboardName: json['surfboardName'],
       customerName: json['customerName'],
       issue: json['issue'],
