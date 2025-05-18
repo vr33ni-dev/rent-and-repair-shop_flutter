@@ -1,9 +1,9 @@
 class BillResponse {
-  final int id;
-  final int customerId;
+  final String id;
+  final String customerId;
   final String customerName;
-  final int? rentalId;
-  final int? repairId;
+  final String? rentalId;
+  final String? repairId;
   final double rentalFee;
   final double repairFee;
   final double totalAmount;

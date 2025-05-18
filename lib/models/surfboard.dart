@@ -1,5 +1,5 @@
 class Surfboard {
-  final int id;
+  final String id;
   final String name;
   final bool available;
   final bool damaged;

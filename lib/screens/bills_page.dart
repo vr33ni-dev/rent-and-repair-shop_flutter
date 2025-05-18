@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rent_and_repair_shop_flutter/l10n/app_localizations.dart';
 import '../models/bill_response.dart';
 import '../services/api_service.dart';
 
@@ -20,8 +21,12 @@ class _BillsPageState extends State<BillsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('All Bills')),
+      appBar: AppBar(
+        title: Text(localizations.translate('bills_title')),
+      ),
       body: FutureBuilder<List<BillResponse>>(
         future: _bills,
         builder: (context, snapshot) {
@@ -30,7 +35,9 @@ class _BillsPageState extends State<BillsPage> {
           } else if (snapshot.hasError) {
             return Center(child: Text('❌ ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No bills found.'));
+            return Center(
+              child: Text(localizations.translate('bills_no_bills')),
+            );
           }
 
           final bills = snapshot.data!;
@@ -49,43 +56,44 @@ class _BillsPageState extends State<BillsPage> {
                     ),
                     if (b.rentalId != null)
                       Text(
-                        'Rental #${b.rentalId} • Repair #${b.repairId ?? "-"}',
+                        localizations.translate('bills_rental_and_repair')
+                            .replaceAll('{{rentalId}}', '${b.rentalId}')
+                            .replaceAll('{{repairId}}', '${b.repairId ?? "-"}'),
                       ),
                   ],
                 ),
                 subtitle: Text(
-                  'Fees: €${b.rentalFee.toStringAsFixed(2)} + '
-                  '€${b.repairFee.toStringAsFixed(2)} = '
-                  '€${b.totalAmount.toStringAsFixed(2)}\n'
-                  'Status: ${b.status}',
+                  '${localizations.translate('bills_price')}: \$${b.rentalFee.toStringAsFixed(2)} + '
+                  '\$${b.repairFee.toStringAsFixed(2)} = '
+                  '\$${b.totalAmount.toStringAsFixed(2)}\n'
+                  '${localizations.translate('bills_status')}: ${b.status}',
                 ),
                 isThreeLine: true,
-                trailing:
-                    b.status != 'PAID'
-                        ? ElevatedButton(
-                          child: const Text('Mark Paid'),
-                          onPressed: () async {
-                            final success = await ApiService().payBill(b.id);
-                            if (success) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('✅ Bill marked as PAID'),
-                                ),
-                              );
-                              // refresh the list
-                              setState(() {
-                                _bills = ApiService().fetchBills();
-                              });
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('❌ Failed to mark paid'),
-                                ),
-                              );
-                            }
-                          },
-                        )
-                        : const Text('✅ PAID'),
+                trailing: b.status != 'PAID'
+                    ? ElevatedButton(
+                        child: Text(localizations.translate('bills_mark_as_paid')),
+                        onPressed: () async {
+                          final success = await ApiService().payBill(b.id);
+                          if (success) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(localizations.translate('bills_marked_as_paid')),
+                              ),
+                            );
+                            // Refresh the list
+                            setState(() {
+                              _bills = ApiService().fetchBills();
+                            });
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(localizations.translate('bills_could_not_mark_as_paid')),
+                              ),
+                            );
+                          }
+                        },
+                      )
+                    : Text(localizations.translate('bills_paid')),
               );
             },
           );

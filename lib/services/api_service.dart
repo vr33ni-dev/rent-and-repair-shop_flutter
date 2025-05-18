@@ -33,7 +33,7 @@ class ApiService {
   Future<bool> createRental({
     required String name,
     required String contact,
-    required int surfboardId,
+    required String surfboardId, required double rentalFee,
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/rentals'),
@@ -42,6 +42,7 @@ class ApiService {
         'customerName': name,
         'customerContact': contact,
         'surfboardId': surfboardId,
+        'rentalFee': rentalFee,
       }),
     );
     return response.statusCode == 200;
@@ -57,15 +58,59 @@ class ApiService {
     }
   }
 
-  Future<void> returnRental(int rentalId) async {
+  Future<void> returnRental(
+    String rentalId, {
+    required bool isDamaged,
+    String? damageDescription,
+    double? repairPrice,
+  }) async {
+    final url = Uri.parse('$baseUrl/rentals/$rentalId/return');
+    final body = {
+      'isDamaged': isDamaged,
+      if (damageDescription != null) 'damageDescription': damageDescription,
+      if (repairPrice != null) 'repairPrice': repairPrice,
+    };
     final response = await http.post(
-      Uri.parse('$baseUrl/rentals/$rentalId/return'),
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
     );
-
     if (response.statusCode != 200) {
-      throw Exception('Failed to return rental');
+      throw Exception('Failed to return rental: ${response.body}');
     }
   }
+
+
+ /// Create a new repair for a customer-owned board
+ Future<bool> createRepair({
+    required String customerName,
+    required String customerContact,
+    required String surfboardName,
+    required String issue,
+    required double repairFee,
+  }) async {
+    final url = Uri.parse('$baseUrl/repairs');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'customerName': customerName,
+        'customerContact': customerContact,
+        'surfboardName': surfboardName,
+        'issue': issue,
+        'repairFee': repairFee,
+      }),
+    );
+    return response.statusCode == 200;
+  }
+
+  /// Cancel an existing repair
+  Future<bool> cancelRepair(String repairId) async {
+    final url = Uri.parse('$baseUrl/repairs/$repairId/cancel');
+    final resp = await http.post(url);
+    return resp.statusCode == 200;
+  }
+
 
   Future<List<RepairResponse>> fetchRepairs() async {
     final response = await http.get(Uri.parse('$baseUrl/repairs/all'));
@@ -78,6 +123,14 @@ class ApiService {
     }
   }
 
+  Future<void> markRepairAsCompleted(String repairId) async {
+    final url = Uri.parse('$baseUrl/repairs/$repairId/complete');
+    final response = await http.post(url);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to mark repair as completed');
+    }
+  }
+  
   Future<List<Surfboard>> fetchSurfboards() async {
     final response = await http.get(Uri.parse('$baseUrl/surfboards/all'));
 
@@ -101,7 +154,7 @@ class ApiService {
   }
 
   /// Marks the given bill as paid.
-  Future<bool> payBill(int id) async {
+  Future<bool> payBill(String id) async {
     final url = Uri.parse('$baseUrl/bills/$id/pay');
     final resp = await http.post(url);
     return resp.statusCode == 200;

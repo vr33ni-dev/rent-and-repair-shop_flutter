@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:rent_and_repair_shop_flutter/enums/rental_status.dart';
 import '../models/rental_response.dart';
 import '../models/surfboard.dart';
 import '../services/api_service.dart';
+import '../l10n/app_localizations.dart';
 
 class RentalsPage extends StatefulWidget {
   const RentalsPage({super.key});
@@ -14,7 +16,7 @@ class _RentalsPageState extends State<RentalsPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _contactController = TextEditingController();
-  bool _showHistory = false; // ← new: whether to include returned rentals
+  bool _showHistory = false;
 
   Surfboard? _selectedBoard;
   List<Surfboard> _availableBoards = [];
@@ -39,35 +41,117 @@ class _RentalsPageState extends State<RentalsPage> {
   }
 
   Future<void> _createRental() async {
+    final localizations = AppLocalizations.of(context);
+
     if (_formKey.currentState!.validate() && _selectedBoard != null) {
       final success = await ApiService().createRental(
-        name: _nameController.text,
-        contact: _contactController.text,
+        name: _nameController.text.trim(),
+        contact: _contactController.text.trim(),
         surfboardId: _selectedBoard!.id,
+        rentalFee: 0,
       );
 
       if (success) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('✅ Rental created!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(localizations.translate('rentals_rental_created'))),
+        );
+
+        // Clear the form state and controllers
         _formKey.currentState!.reset();
+        _nameController.clear();
+        _contactController.clear();
+
+        // Reset the selected board and update state
         setState(() {
           _selectedBoard = null;
         });
+
+        // Refresh rentals and available boards
         _fetchRentals();
         _fetchAvailableBoards();
       }
     }
   }
 
+  Future<Map<String, dynamic>?> _showReturnDialog(BuildContext context) async {
+    final damageDescriptionController = TextEditingController();
+    final repairPriceController = TextEditingController();
+    bool isDamaged = false;
+
+    return showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Return Board'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CheckboxListTile(
+                    title: Text('Is the board damaged?'),
+                    value: isDamaged,
+                    onChanged: (value) {
+                      setState(() {
+                        isDamaged = value ?? false;
+                      });
+                    },
+                  ),
+                  if (isDamaged) ...[
+                    TextField(
+                      controller: damageDescriptionController,
+                      decoration: InputDecoration(
+                        labelText: 'Damage Description',
+                      ),
+                    ),
+                    TextField(
+                      controller: repairPriceController,
+                      decoration: InputDecoration(labelText: 'Repair Price'),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, null),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, {
+                      'isDamaged': isDamaged,
+                      'damageDescription':
+                          isDamaged ? damageDescriptionController.text : null,
+                      'repairPrice':
+                          isDamaged
+                              ? double.tryParse(repairPriceController.text)
+                              : null,
+                    });
+                  },
+                  child: Text('Confirm'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('📦 Create Rental', style: TextStyle(fontSize: 20)),
+          Text(
+            localizations.translate('rentals_create_new_rental'),
+            style: const TextStyle(fontSize: 20),
+          ),
           const SizedBox(height: 8),
           Form(
             key: _formKey,
@@ -75,21 +159,29 @@ class _RentalsPageState extends State<RentalsPage> {
               children: [
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Customer Name'),
+                  decoration: InputDecoration(
+                    labelText: localizations.translate('rentals_customer_name'),
+                  ),
                   validator:
-                      (val) => val == null || val.isEmpty ? 'Required' : null,
+                      (val) =>
+                          val == null || val.isEmpty
+                              ? localizations.translate('rentals_required')
+                              : null,
                 ),
                 TextFormField(
                   controller: _contactController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email or Phone',
+                  decoration: InputDecoration(
+                    labelText: localizations.translate('rentals_contact_info'),
                   ),
                   validator:
-                      (val) => val == null || val.isEmpty ? 'Required' : null,
+                      (val) =>
+                          val == null || val.isEmpty
+                              ? localizations.translate('rentals_required')
+                              : null,
                 ),
                 DropdownButtonFormField<Surfboard>(
-                  decoration: const InputDecoration(
-                    labelText: 'Select Surfboard',
+                  decoration: InputDecoration(
+                    labelText: localizations.translate('rentals_select_board'),
                   ),
                   items:
                       _availableBoards.map((board) {
@@ -99,26 +191,34 @@ class _RentalsPageState extends State<RentalsPage> {
                         );
                       }).toList(),
                   onChanged: (val) => setState(() => _selectedBoard = val),
-                  validator: (val) => val == null ? 'Choose one' : null,
+                  validator:
+                      (val) =>
+                          val == null
+                              ? localizations.translate('rentals_select')
+                              : null,
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _createRental,
-                  child: const Text('Create Rental'),
+                  child: Text(localizations.translate('rentals_create_rental')),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 32),
           const Divider(),
-          const Text('📋 Current Rentals', style: TextStyle(fontSize: 20)),
+          Text(
+            localizations.translate('rentals_active_rentals'),
+            style: const TextStyle(fontSize: 20),
+          ),
           const SizedBox(height: 8),
-          // Toggle switch
           SwitchListTile(
             title: Text(
               _showHistory
-                  ? 'Showing all rentals'
-                  : 'Showing only active rentals',
+                  ? localizations.translate('rentals_show_all_rentals')
+                  : localizations.translate(
+                    'rentals_show_rentals_active_rentals',
+                  ),
             ),
             value: _showHistory,
             onChanged: (val) => setState(() => _showHistory = val),
@@ -132,15 +232,22 @@ class _RentalsPageState extends State<RentalsPage> {
               } else if (snapshot.hasError) {
                 return Center(child: Text('❌ ${snapshot.error}'));
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(child: Text('No rentals found.'));
+                return Center(
+                  child: Text(
+                    localizations.translate('rentals_no_rentals_found'),
+                  ),
+                );
               }
 
               final allRentals = snapshot.data!;
-              // ← NEW: apply the filter
+     
+
               final rentals =
                   _showHistory
                       ? allRentals
-                      : allRentals.where((r) => r.status == 'CREATED').toList();
+                      : allRentals
+                          .where((r) => r.status == RentalStatus.created)
+                          .toList();
 
               return ListView.builder(
                 shrinkWrap: true,
@@ -166,33 +273,53 @@ class _RentalsPageState extends State<RentalsPage> {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Status: ${r.status}'),
-                        Text('Rented: ${r.rentedAt.split('T').first}'),
+                        Text(
+                          '${localizations.translate('rentals_status')}: ${r.status}',
+                        ),
+                        Text(
+                          '${localizations.translate('rentals_rented')}: ${r.rentedAt.split('T').first}',
+                        ),
                         if (r.returnedAt != null)
-                          Text('Returned: ${r.returnedAt!.split('T').first}'),
+                          Text(
+                            '${localizations.translate('rentals_fee')}: \$${r.rentalFee?.toStringAsFixed(2)}',
+                          ),
                       ],
                     ),
                     isThreeLine: true,
                     trailing:
-                        r.status == 'CREATED'
+                        r.status == RentalStatus.created
                             ? ElevatedButton(
                               child: const Text('Return'),
                               onPressed: () async {
-                                try {
-                                  await ApiService().returnRental(r.rentalId);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Board returned!'),
-                                    ),
-                                  );
-                                  setState(() {
-                                    _rentals = ApiService().fetchRentals();
-                                    _fetchAvailableBoards();
-                                  });
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('❌ Error: $e')),
-                                  );
+                                final result = await _showReturnDialog(context);
+
+                                if (result != null) {
+                                  try {
+                                    await ApiService().returnRental(
+                                      r.rentalId,
+                                      isDamaged: result['isDamaged'],
+                                      damageDescription:
+                                          result['damageDescription'],
+                                      repairPrice: result['repairPrice'],
+                                    );
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Board returned successfully!',
+                                        ),
+                                      ),
+                                    );
+
+                                    setState(() {
+                                      _rentals = ApiService().fetchRentals();
+                                      _fetchAvailableBoards();
+                                    });
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Error: $e')),
+                                    );
+                                  }
                                 }
                               },
                             )

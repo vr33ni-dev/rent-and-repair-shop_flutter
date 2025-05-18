@@ -1,8 +1,8 @@
 class RepairResponse {
-  final int repairId;
-  final int surfboardId;
-  final int customerId;
-  final int? rentalId;
+  final String repairId;
+  final String surfboardId;
+  final String? customerId;
+  final String? rentalId;
   final String surfboardName;
   final String customerName;
   final String issue;

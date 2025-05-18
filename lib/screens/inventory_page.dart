@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rent_and_repair_shop_flutter/l10n/app_localizations.dart';
 import '../models/surfboard.dart';
 import '../services/api_service.dart';
 
@@ -22,8 +23,12 @@ class _InventoryPageState extends State<InventoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Surfboard Inventory')),
+      appBar: AppBar(
+        title: Text(localizations.translate('inventory_title')),
+      ),
       body: FutureBuilder<List<Surfboard>>(
         future: _boardsFuture,
         builder: (context, snapshot) {
@@ -32,7 +37,9 @@ class _InventoryPageState extends State<InventoryPage> {
           } else if (snapshot.hasError) {
             return Center(child: Text('❌ ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No surfboards found.'));
+            return Center(
+              child: Text(localizations.translate('inventory_no_boards')),
+            );
           }
 
           final allBoards = snapshot.data!;
@@ -49,8 +56,8 @@ class _InventoryPageState extends State<InventoryPage> {
               SwitchListTile(
                 title: Text(
                   _showOnlyAvailable
-                      ? 'Showing only available'
-                      : 'Including unavailable',
+                      ? localizations.translate('inventory_show_only_available')
+                      : localizations.translate('inventory_include_unavailable'),
                 ),
                 secondary: const Icon(Icons.check_circle_outline),
                 value: _showOnlyAvailable,
@@ -59,8 +66,8 @@ class _InventoryPageState extends State<InventoryPage> {
               SwitchListTile(
                 title: Text(
                   _showOnlyShopOwned
-                      ? 'Showing only shop-owned'
-                      : 'Including customer-owned',
+                      ? localizations.translate('inventory_show_only_shop_owned')
+                      : localizations.translate('inventory_include_customer_owned'),
                 ),
                 secondary: const Icon(Icons.storefront),
                 value: _showOnlyShopOwned,
@@ -80,15 +87,17 @@ class _InventoryPageState extends State<InventoryPage> {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (b.shopOwned)
-                            Text('Available: ${b.available ? 'Yes' : 'No'}'),
-                          Text('Damaged: ${b.damaged ? 'Yes' : 'No'}'),
+                          Text(
+                            '${localizations.translate('inventory_available')}: ${b.available ? localizations.translate('inventory_available') : localizations.translate('inventory_not_available')}',
+                          ),
+                          Text(
+                            '${localizations.translate('inventory_damaged')}: ${b.damaged ? localizations.translate('inventory_damaged') : localizations.translate('inventory_not_damaged')}',
+                          ),
                         ],
                       ),
-                      trailing:
-                          b.shopOwned
-                              ? const Text('🛒 Shop-owned')
-                              : const Text('👤 Customer-owned'),
+                      trailing: b.shopOwned
+                          ? Text(localizations.translate('inventory_shop_owned'))
+                          : Text(localizations.translate('inventory_customer_owned')),
                     );
                   },
                 ),
