@@ -114,6 +114,7 @@ class ApiService {
 
   Future<List<RepairResponse>> fetchRepairs() async {
     final response = await http.get(Uri.parse('$baseUrl/repairs/all'));
+print('GET body: ${response.body}');
 
     if (response.statusCode == 200) {
       final List<dynamic> jsonList = jsonDecode(response.body);

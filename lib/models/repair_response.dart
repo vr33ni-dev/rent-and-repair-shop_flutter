@@ -3,7 +3,7 @@ class RepairResponse {
   final String surfboardId;
   final String? customerId;
   final String? rentalId;
-  final String surfboardName;
+  final String? surfboardName;
   final String customerName;
   final String issue;
   final String status;
@@ -27,7 +27,7 @@ class RepairResponse {
       surfboardId: json['surfboardId'],
       customerId: json['customerId'],
       rentalId: json['rentalId'],
-      surfboardName: json['surfboardName'],
+      surfboardName: json['surfboardName'] as String?,
       customerName: json['customerName'],
       issue: json['issue'],
       status: json['status'],

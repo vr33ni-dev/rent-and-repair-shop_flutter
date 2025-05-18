@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:rent_and_repair_shop_flutter/l10n/app_localizations.dart';
 import '../models/repair_response.dart';
 import '../services/api_service.dart';
-import 'package:intl/intl.dart';
+
+enum _SortOrder { newestFirst, oldestFirst }
 
 class RepairsPage extends StatefulWidget {
   const RepairsPage({super.key});
@@ -12,11 +14,9 @@ class RepairsPage extends StatefulWidget {
   State<RepairsPage> createState() => _RepairsPageState();
 }
 
-enum _SortOrder { newestFirst, oldestFirst }
-
 class _RepairsPageState extends State<RepairsPage> {
   late Future<List<RepairResponse>> _repairs;
-  bool _showHistory = false;
+  bool _showAll = false;
   _SortOrder _sortOrder = _SortOrder.newestFirst;
 
   @override
@@ -75,109 +75,74 @@ class _RepairsPageState extends State<RepairsPage> {
 
     showDialog(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: Text(local.translate('repairs_new_repair')),
-            content: Form(
-              key: _formKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: local.translate('repairs_customer_name'),
-                      ),
-                      onSaved: (v) => customerName = v,
-                      validator:
-                          (v) =>
-                              v == null || v.isEmpty
-                                  ? local.translate('field_required')
-                                  : null,
-                    ),
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: local.translate('repairs_customer_contact'),
-                      ),
-                      onSaved: (v) => customerContact = v,
-                      validator:
-                          (v) =>
-                              v == null || v.isEmpty
-                                  ? local.translate('field_required')
-                                  : null,
-                    ),
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: local.translate('repairs_board'),
-                      ),
-                      onSaved: (v) => surfboardName = v,
-                      validator:
-                          (v) =>
-                              v == null || v.isEmpty
-                                  ? local.translate('field_required')
-                                  : null,
-                    ),
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: local.translate('repairs_issue'),
-                      ),
-                      onSaved: (v) => issue = v,
-                      validator:
-                          (v) =>
-                              v == null || v.isEmpty
-                                  ? local.translate('field_required')
-                                  : null,
-                    ),
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: local.translate('repairs_fee'),
-                      ),
-                      keyboardType: TextInputType.number,
-                      onSaved: (v) => feeText = v,
-                      validator:
-                          (v) =>
-                              v == null || double.tryParse(v) == null
-                                  ? local.translate('invalid_number')
-                                  : null,
-                    ),
-                  ],
+      builder: (ctx) => AlertDialog(
+        title: Text(local.translate('repairs_new_repair')),
+        content: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextFormField(
+                  decoration: InputDecoration(labelText: local.translate('repairs_customer_name')),
+                  onSaved: (v) => customerName = v,
+                  validator: (v) => v == null || v.isEmpty ? local.translate('field_required') : null,
                 ),
-              ),
+                TextFormField(
+                  decoration: InputDecoration(labelText: local.translate('repairs_customer_contact')),
+                  onSaved: (v) => customerContact = v,
+                  validator: (v) => v == null || v.isEmpty ? local.translate('field_required') : null,
+                ),
+                TextFormField(
+                  decoration: InputDecoration(labelText: local.translate('repairs_board')),
+                  onSaved: (v) => surfboardName = v,
+                  validator: (v) => v == null || v.isEmpty ? local.translate('field_required') : null,
+                ),
+                TextFormField(
+                  decoration: InputDecoration(labelText: local.translate('repairs_issue')),
+                  onSaved: (v) => issue = v,
+                  validator: (v) => v == null || v.isEmpty ? local.translate('field_required') : null,
+                ),
+                TextFormField(
+                  decoration: InputDecoration(labelText: local.translate('repairs_fee')),
+                  keyboardType: TextInputType.number,
+                  onSaved: (v) => feeText = v,
+                  validator: (v) => v == null || double.tryParse(v) == null ? local.translate('invalid_number') : null,
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                child: Text(local.translate('cancel')),
-                onPressed: () => Navigator.of(ctx).pop(),
-              ),
-              ElevatedButton(
-                child: Text(local.translate('repairs_create')),
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    final fee = double.parse(feeText!);
-                    final ok = await ApiService().createRepair(
-                      customerName: customerName!,
-                      customerContact: customerContact!,
-                      surfboardName: surfboardName!,
-                      issue: issue!,
-                      repairFee: fee,
-                    );
-                    Navigator.of(ctx).pop();
-                    if (ok) {
-                      setState(_loadRepairs);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            local.translate('repairs_error_creating'),
-                          ),
-                        ),
-                      );
-                    }
-                  }
-                },
-              ),
-            ],
           ),
+        ),
+        actions: [
+          TextButton(
+            child: Text(local.translate('cancel')),
+            onPressed: () => Navigator.of(ctx).pop(),
+          ),
+          ElevatedButton(
+            child: Text(local.translate('repairs_create')),
+            onPressed: () async {
+              if (_formKey.currentState!.validate()) {
+                _formKey.currentState!.save();
+                final fee = double.parse(feeText!);
+                final ok = await ApiService().createRepair(
+                  customerName: customerName!,
+                  customerContact: customerContact!,
+                  surfboardName: surfboardName!,
+                  issue: issue!,
+                  repairFee: fee,
+                );
+                Navigator.of(ctx).pop();
+                if (ok) {
+                  setState(_loadRepairs);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(local.translate('repairs_error_creating'))),
+                  );
+                }
+              }
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -203,24 +168,17 @@ class _RepairsPageState extends State<RepairsPage> {
           }
 
           final allRepairs = snapshot.data ?? [];
-          // filter active vs history
-          var repairs =
-              _showHistory
-                  ? allRepairs
-                  : allRepairs.where((r) => r.status == 'CREATED').toList();
-
-          // sort by createdAt
-          repairs.sort((a, b) {
-            final da = DateTime.parse(a.createdAt!);
-            final db = DateTime.parse(b.createdAt!);
-            return _sortOrder == _SortOrder.newestFirst
-                ? db.compareTo(da)
-                : da.compareTo(db);
-          });
+          final repairs = (_showAll ? allRepairs : allRepairs.where((r) => r.status == 'CREATED').toList())
+            ..sort((a, b) {
+              final da = DateTime.parse(a.createdAt!);
+              final db = DateTime.parse(b.createdAt!);
+              return _sortOrder == _SortOrder.newestFirst
+                  ? db.compareTo(da)
+                  : da.compareTo(db);
+            });
 
           return Column(
             children: [
-              // Inside Column(children: [...])
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: DropdownButton<_SortOrder>(
@@ -241,15 +199,15 @@ class _RepairsPageState extends State<RepairsPage> {
                   ],
                 ),
               ),
-
               SwitchListTile(
                 title: Text(
-                  _showHistory
-                      ? local.translate('repairs_show_active')
-                      : local.translate('repairs_show_all'),
+                  _showAll
+                      ? local.translate('repairs_filter_active_only')
+                      : local.translate('repairs_filter_show_all'),
                 ),
-                value: _showHistory,
-                onChanged: (v) => setState(() => _showHistory = v),
+                secondary: const Icon(Icons.filter_list),
+                value: _showAll,
+                onChanged: (v) => setState(() => _showAll = v),
               ),
               Expanded(
                 child: ListView.builder(
@@ -257,24 +215,15 @@ class _RepairsPageState extends State<RepairsPage> {
                   itemBuilder: (context, index) {
                     final r = repairs[index];
                     return ListTile(
-                      leading: CircleAvatar(
-                        child: Text(r.repairId.substring(0, 4)),
-                      ),
+                      leading: CircleAvatar(child: Text(r.repairId.substring(0, 4))),
                       title: Text('${r.customerName} — ${r.surfboardName}'),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (r.rentalId != null)
-                            Text(
-                              '${local.translate('repairs_rental_id')}: ${r.rentalId}',
-                            ),
-                          Text(
-                            '${local.translate('repairs_issue')}: ${r.issue}',
-                          ),
-                          Text(
-                            '${local.translate('repairs_status')}: ${r.status}',
-                          ),
-                          // new line:
+                            Text('${local.translate('repairs_rental_id')}: ${r.rentalId}'),
+                          Text('${local.translate('repairs_issue')}: ${r.issue}'),
+                          Text('${local.translate('repairs_status')}: ${r.status}'),
                           if (r.createdAt != null)
                             Text(
                               '${local.translate('repairs_created_at')}: '
@@ -282,35 +231,26 @@ class _RepairsPageState extends State<RepairsPage> {
                             ),
                         ],
                       ),
-
-                      trailing:
-                          r.status == 'CREATED'
-                              ? Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ElevatedButton(
-                                    onPressed:
-                                        () => _markAsRepaired(r.repairId),
-                                    child: Text(
-                                      local.translate(
-                                        'repairs_mark_as_repaired',
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  OutlinedButton(
-                                    onPressed: () => _cancelRepair(r.repairId),
-                                    child: Text(
-                                      local.translate('repairs_cancel'),
-                                    ),
-                                  ),
-                                ],
-                              )
-                              : Text(
-                                r.status == 'COMPLETED'
-                                    ? local.translate('repairs_completed')
-                                    : local.translate('repairs_canceled'),
-                              ),
+                      trailing: r.status == 'CREATED'
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () => _markAsRepaired(r.repairId),
+                                  child: Text(local.translate('repairs_mark_as_repaired')),
+                                ),
+                                const SizedBox(width: 8),
+                                OutlinedButton(
+                                  onPressed: () => _cancelRepair(r.repairId),
+                                  child: Text(local.translate('repairs_cancel')),
+                                ),
+                              ],
+                            )
+                          : Text(
+                              r.status == 'COMPLETED'
+                                  ? local.translate('repairs_completed')
+                                  : local.translate('repairs_canceled'),
+                            ),
                       isThreeLine: true,
                     );
                   },
