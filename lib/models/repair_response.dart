@@ -8,6 +8,7 @@ class RepairResponse {
   final String issue;
   final String status;
   final String? createdAt;
+  final double? repairFee;
 
   RepairResponse({
     required this.repairId,
@@ -19,6 +20,7 @@ class RepairResponse {
     required this.issue,
     required this.status,
     required this.createdAt,
+    required this.repairFee,
   });
 
   factory RepairResponse.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class RepairResponse {
       issue: json['issue'],
       status: json['status'],
       createdAt: json['createdAt'],
+      repairFee: (json['repairFee'] as num).toDouble(),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:rent_and_repair_shop_flutter/enums/rental_status.dart';
 import '../models/rental_response.dart';
 import '../models/surfboard.dart';
@@ -16,7 +17,9 @@ class _RentalsPageState extends State<RentalsPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _contactController = TextEditingController();
+
   bool _showHistory = false;
+  DateTimeRange? _filterRange;
 
   Surfboard? _selectedBoard;
   List<Surfboard> _availableBoards = [];
@@ -41,118 +44,140 @@ class _RentalsPageState extends State<RentalsPage> {
   }
 
   Future<void> _createRental() async {
-    final localizations = AppLocalizations.of(context);
-
+    final loc = AppLocalizations.of(context);
     if (_formKey.currentState!.validate() && _selectedBoard != null) {
       final success = await ApiService().createRental(
         name: _nameController.text.trim(),
         contact: _contactController.text.trim(),
         surfboardId: _selectedBoard!.id,
-        rentalFee: 0,
+        rentalFee: 15.0, // or whatever your default is
       );
-
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(localizations.translate('rentals_rental_created'))),
+          SnackBar(content: Text(loc.translate('rentals_rental_created'))),
         );
-
-        // Clear the form state and controllers
         _formKey.currentState!.reset();
         _nameController.clear();
         _contactController.clear();
-
-        // Reset the selected board and update state
-        setState(() {
-          _selectedBoard = null;
-        });
-
-        // Refresh rentals and available boards
+        setState(() => _selectedBoard = null);
         _fetchRentals();
         _fetchAvailableBoards();
       }
     }
   }
 
-  Future<Map<String, dynamic>?> _showReturnDialog(BuildContext context) async {
-    final damageDescriptionController = TextEditingController();
-    final repairPriceController = TextEditingController();
+  /// Shows the “Return Board” dialog, computes days×rate, lets user override.
+  Future<Map<String, dynamic>?> _showReturnDialog({
+    required BuildContext context,
+    required DateTime rentedAt,
+    required double dailyRate,
+  }) {
+    final loc = AppLocalizations.of(context);
+    final damageDescCtrl = TextEditingController();
+    final repairPriceCtrl = TextEditingController();
+    final feeCtrl = TextEditingController();
+
+    // compute inclusive days
+    final now = DateTime.now();
+    final days = now.difference(rentedAt).inDays + 1;
+    final defaultFee = days * dailyRate;
+    feeCtrl.text = defaultFee.toStringAsFixed(2);
+
     bool isDamaged = false;
 
     return showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text('Return Board'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CheckboxListTile(
-                    title: Text('Is the board damaged?'),
-                    value: isDamaged,
-                    onChanged: (value) {
-                      setState(() {
-                        isDamaged = value ?? false;
-                      });
-                    },
-                  ),
-                  if (isDamaged) ...[
-                    TextField(
-                      controller: damageDescriptionController,
-                      decoration: InputDecoration(
-                        labelText: 'Damage Description',
+      builder:
+          (ctx) => StatefulBuilder(
+            builder:
+                (ctx, setState) => AlertDialog(
+                  title: Text(loc.translate('rentals_return')),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CheckboxListTile(
+                        title: Text(loc.translate('rentals_damaged')),
+                        value: isDamaged,
+                        onChanged:
+                            (v) => setState(() => isDamaged = v ?? false),
                       ),
+                      if (isDamaged) ...[
+                        TextField(
+                          controller: damageDescCtrl,
+                          decoration: InputDecoration(
+                            labelText: loc.translate(
+                              'rentals_damage_description',
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        TextField(
+                          controller: repairPriceCtrl,
+                          decoration: InputDecoration(
+                            labelText: loc.translate('rentals_repair_price'),
+                          ),
+                          keyboardType: TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                      ],
+                      TextField(
+                        controller: feeCtrl,
+                        decoration: InputDecoration(
+                          labelText:
+                              '${loc.translate('rentals_total_fee')} (×$days days)',
+                        ),
+                        keyboardType: TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, null),
+                      child: Text(loc.translate('cancel')),
                     ),
-                    TextField(
-                      controller: repairPriceController,
-                      decoration: InputDecoration(labelText: 'Repair Price'),
-                      keyboardType: TextInputType.number,
+                    ElevatedButton(
+                      onPressed: () {
+                        final finalFee =
+                            double.tryParse(feeCtrl.text) ?? defaultFee;
+                        Navigator.pop(ctx, {
+                          'isDamaged': isDamaged,
+                          'damageDescription':
+                              isDamaged ? damageDescCtrl.text : null,
+                          'repairPrice':
+                              isDamaged
+                                  ? double.tryParse(repairPriceCtrl.text)
+                                  : null,
+                          'finalFee': finalFee,
+                        });
+                      },
+                      child: Text(loc.translate('confirm')),
                     ),
                   ],
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, null),
-                  child: Text('Cancel'),
                 ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context, {
-                      'isDamaged': isDamaged,
-                      'damageDescription':
-                          isDamaged ? damageDescriptionController.text : null,
-                      'repairPrice':
-                          isDamaged
-                              ? double.tryParse(repairPriceController.text)
-                              : null,
-                    });
-                  },
-                  child: Text('Confirm'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+          ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context);
+    final loc = AppLocalizations.of(context);
+    final df = DateFormat('dd/MM/yyyy');
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ─── Create New Rental ───────────────────
           Text(
-            localizations.translate('rentals_create_new_rental'),
+            loc.translate('rentals_create_new_rental'),
             style: const TextStyle(fontSize: 20),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Form(
             key: _formKey,
             child: Column(
@@ -160,128 +185,155 @@ class _RentalsPageState extends State<RentalsPage> {
                 TextFormField(
                   controller: _nameController,
                   decoration: InputDecoration(
-                    labelText: localizations.translate('rentals_customer_name'),
+                    labelText: loc.translate('rentals_customer_name'),
                   ),
                   validator:
-                      (val) =>
-                          val == null || val.isEmpty
-                              ? localizations.translate('rentals_required')
+                      (v) =>
+                          v == null || v.isEmpty
+                              ? loc.translate('rentals_required')
                               : null,
                 ),
                 TextFormField(
                   controller: _contactController,
                   decoration: InputDecoration(
-                    labelText: localizations.translate('rentals_contact_info'),
+                    labelText: loc.translate('rentals_contact_info'),
                   ),
                   validator:
-                      (val) =>
-                          val == null || val.isEmpty
-                              ? localizations.translate('rentals_required')
+                      (v) =>
+                          v == null || v.isEmpty
+                              ? loc.translate('rentals_required')
                               : null,
                 ),
                 DropdownButtonFormField<Surfboard>(
                   decoration: InputDecoration(
-                    labelText: localizations.translate('rentals_select_board'),
+                    labelText: loc.translate('rentals_select_board'),
                   ),
                   items:
-                      _availableBoards.map((board) {
-                        return DropdownMenuItem(
-                          value: board,
-                          child: Text(board.name),
-                        );
-                      }).toList(),
-                  onChanged: (val) => setState(() => _selectedBoard = val),
+                      _availableBoards
+                          .map(
+                            (b) =>
+                                DropdownMenuItem(value: b, child: Text(b.name)),
+                          )
+                          .toList(),
+                  onChanged: (b) => setState(() => _selectedBoard = b),
                   validator:
-                      (val) =>
-                          val == null
-                              ? localizations.translate('rentals_select')
-                              : null,
+                      (v) => v == null ? loc.translate('rentals_select') : null,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _createRental,
-                  child: Text(localizations.translate('rentals_create_rental')),
+                  child: Text(loc.translate('rentals_create_rental')),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 32),
-          const Divider(),
-          Text(
-            localizations.translate('rentals_active_rentals'),
-            style: const TextStyle(fontSize: 20),
+
+          SizedBox(height: 32),
+          Divider(),
+
+          // ─── Date-Range & Clear ─────────────────
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _filterRange == null
+                      ? loc.translate('rentals_filter_by_date')
+                      : '${df.format(_filterRange!.start)} → ${df.format(_filterRange!.end)}',
+                ),
+              ),
+              if (_filterRange != null)
+                IconButton(
+                  icon: Icon(Icons.clear),
+                  tooltip: loc.translate('rentals_clear_filter'),
+                  onPressed: () => setState(() => _filterRange = null),
+                ),
+              TextButton.icon(
+                icon: Icon(Icons.date_range),
+                label: Text(loc.translate('rentals_pick_range')),
+                onPressed: () async {
+                  final now = DateTime.now();
+                  final lastYear = DateTime(now.year - 1, now.month, now.day);
+                  final picked = await showDateRangePicker(
+                    context: context,
+                    firstDate: lastYear,
+                    lastDate: now,
+                    initialDateRange: _filterRange,
+                  );
+                  if (picked != null) setState(() => _filterRange = picked);
+                },
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+
+          SizedBox(height: 16),
+          // ─── Active / All Toggle ───────────────
           SwitchListTile(
             title: Text(
               _showHistory
-                  ? localizations.translate('rentals_show_all_rentals')
-                  : localizations.translate(
-                    'rentals_show_rentals_active_rentals',
-                  ),
+                  ? loc.translate('rentals_show_all_rentals')
+                  : loc.translate('rentals_show_rentals_active_rentals'),
             ),
             value: _showHistory,
-            onChanged: (val) => setState(() => _showHistory = val),
-            secondary: const Icon(Icons.filter_list),
+            onChanged: (v) => setState(() => _showHistory = v),
+            secondary: Icon(Icons.filter_list),
           ),
+
+          // ─── Rentals List ───────────────────────
           FutureBuilder<List<RentalResponse>>(
             future: _rentals,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('❌ ${snapshot.error}'));
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(
-                  child: Text(
-                    localizations.translate('rentals_no_rentals_found'),
-                  ),
-                );
+            builder: (ctx, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
               }
+              if (snap.hasError) return Center(child: Text('❌ ${snap.error}'));
+              final all = snap.data ?? [];
 
-              final allRentals = snapshot.data!;
-     
-
-              final rentals =
+              // 1) active vs history
+              var filtered =
                   _showHistory
-                      ? allRentals
-                      : allRentals
+                      ? all
+                      : all
                           .where((r) => r.status == RentalStatus.created)
                           .toList();
 
+              // 2) date-range
+              if (_filterRange != null) {
+                filtered =
+                    filtered.where((r) {
+                      final d = DateTime.parse(r.rentedAt);
+                      return !d.isBefore(_filterRange!.start) &&
+                          !d.isAfter(_filterRange!.end);
+                    }).toList();
+              }
+
+              if (filtered.isEmpty) {
+                return Center(
+                  child: Text(loc.translate('rentals_no_rentals_found')),
+                );
+              }
+
               return ListView.builder(
                 shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: rentals.length,
-                itemBuilder: (context, index) {
-                  final r = rentals[index];
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: filtered.length,
+                itemBuilder: (ctx, i) {
+                  final r = filtered[i];
+                  final rentDate = DateTime.parse(r.rentedAt);
                   return ListTile(
-                    leading: CircleAvatar(child: Text('${r.rentalId}')),
-                    title: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${r.customerName} (ID: ${r.customerId})',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          '${r.surfboardName} (ID: ${r.surfboardId})',
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
-                      ],
+                    leading: CircleAvatar(
+                      child: Text(r.rentalId.substring(0, 4)),
                     ),
+                    title: Text('${r.customerName} — ${r.surfboardName}'),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text('${loc.translate('rentals_status')}: ${r.status}'),
                         Text(
-                          '${localizations.translate('rentals_status')}: ${r.status}',
-                        ),
-                        Text(
-                          '${localizations.translate('rentals_rented')}: ${r.rentedAt.split('T').first}',
+                          '${loc.translate('rentals_rented')}: ${df.format(rentDate)}',
                         ),
                         if (r.returnedAt != null)
                           Text(
-                            '${localizations.translate('rentals_fee')}: \$${r.rentalFee?.toStringAsFixed(2)}',
+                            '${loc.translate('rentals_fee')}: \$${r.rentalFee.toStringAsFixed(2)}',
                           ),
                       ],
                     ),
@@ -289,38 +341,26 @@ class _RentalsPageState extends State<RentalsPage> {
                     trailing:
                         r.status == RentalStatus.created
                             ? ElevatedButton(
-                              child: const Text('Return'),
+                              child: Text(loc.translate('rentals_return')),
                               onPressed: () async {
-                                final result = await _showReturnDialog(context);
+                                final result = await _showReturnDialog(
+                                  context: context,
+                                  rentedAt: rentDate,
+                                  dailyRate: r.rentalFee ?? 15.0,
+                                );
+                                if (result == null) return;
 
-                                if (result != null) {
-                                  try {
-                                    await ApiService().returnRental(
-                                      r.rentalId,
-                                      isDamaged: result['isDamaged'],
-                                      damageDescription:
-                                          result['damageDescription'],
-                                      repairPrice: result['repairPrice'],
-                                    );
-
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Board returned successfully!',
-                                        ),
-                                      ),
-                                    );
-
-                                    setState(() {
-                                      _rentals = ApiService().fetchRentals();
-                                      _fetchAvailableBoards();
-                                    });
-                                  } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Error: $e')),
-                                    );
-                                  }
-                                }
+                                await ApiService().returnRental(
+                                  r.rentalId,
+                                  isDamaged: result['isDamaged'],
+                                  damageDescription:
+                                      result['damageDescription'],
+                                  repairPrice: result['repairPrice'],
+                                  finalFee: result['finalFee'],
+                                );
+                                // refresh
+                                _fetchRentals();
+                                _fetchAvailableBoards();
                               },
                             )
                             : null,

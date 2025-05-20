@@ -33,7 +33,8 @@ class ApiService {
   Future<bool> createRental({
     required String name,
     required String contact,
-    required String surfboardId, required double rentalFee,
+    required String surfboardId,
+    required double rentalFee,
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/rentals'),
@@ -63,12 +64,14 @@ class ApiService {
     required bool isDamaged,
     String? damageDescription,
     double? repairPrice,
+    required double finalFee, // ← add this
   }) async {
     final url = Uri.parse('$baseUrl/rentals/$rentalId/return');
     final body = {
       'isDamaged': isDamaged,
       if (damageDescription != null) 'damageDescription': damageDescription,
       if (repairPrice != null) 'repairPrice': repairPrice,
+      'finalFee': finalFee, // ← and send it
     };
     final response = await http.post(
       url,
@@ -80,9 +83,8 @@ class ApiService {
     }
   }
 
-
- /// Create a new repair for a customer-owned board
- Future<bool> createRepair({
+  /// Create a new repair for a customer-owned board
+  Future<bool> createRepair({
     required String customerName,
     required String customerContact,
     required String surfboardName,
@@ -111,10 +113,9 @@ class ApiService {
     return resp.statusCode == 200;
   }
 
-
   Future<List<RepairResponse>> fetchRepairs() async {
     final response = await http.get(Uri.parse('$baseUrl/repairs/all'));
-print('GET body: ${response.body}');
+    print('GET body: ${response.body}');
 
     if (response.statusCode == 200) {
       final List<dynamic> jsonList = jsonDecode(response.body);
@@ -131,7 +132,7 @@ print('GET body: ${response.body}');
       throw Exception('Failed to mark repair as completed');
     }
   }
-  
+
   Future<List<Surfboard>> fetchSurfboards() async {
     final response = await http.get(Uri.parse('$baseUrl/surfboards/all'));
 
@@ -147,8 +148,11 @@ print('GET body: ${response.body}');
     final response = await http.get(Uri.parse('$baseUrl/bills/all'));
 
     if (response.statusCode == 200) {
-      final List<dynamic> jsonList = jsonDecode(response.body);
-      return jsonList.map((json) => BillResponse.fromJson(json)).toList();
+      final List<dynamic> list = jsonDecode(response.body);
+      print('💵 raw bills JSON: ${response.body}');
+      return list
+          .map((item) => BillResponse.fromJson(item as Map<String, dynamic>))
+          .toList();
     } else {
       throw Exception('Failed to load bills');
     }
