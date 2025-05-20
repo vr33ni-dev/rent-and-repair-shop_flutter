@@ -26,7 +26,7 @@ class _SurfShopAppState extends State<SurfShopApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Dr Angel y pacientes - Administración',
+      title: 'Administración',
       locale: _locale,
       supportedLocales: const [Locale('en'), Locale('es')],
       localizationsDelegates: const [
