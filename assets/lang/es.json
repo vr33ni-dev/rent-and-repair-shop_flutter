@@ -58,6 +58,7 @@
   "inventory_description": "Descripción",
   "inventory_field_required": "Este campo es obligatorio",
   "inventory_add": "Agregar",
+  "inventory_size:": "Tamaño",
   "inventory_error_adding": "No se pudo agregar la tabla",
   "bills_title": "Todas las facturas",
   "bills_filters_title": "Filtros",
