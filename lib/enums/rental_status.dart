@@ -1,3 +1,5 @@
+import 'package:rent_and_repair_shop_flutter/l10n/app_localizations.dart';
+
 enum RentalStatus {
   created,
   returned,
@@ -24,5 +26,20 @@ String rentalStatusToString(RentalStatus status) {
     case RentalStatus.unknown:
     default:
       return 'UNKNOWN';
+  }
+}
+
+extension RentalStatusX on RentalStatus {
+  /// Looks up the localized name via your AppLocalizations
+  String localized(AppLocalizations loc) {
+    switch (this) {
+      case RentalStatus.created:
+        return loc.translate('rentals_status_created');
+      case RentalStatus.returned:
+        return loc.translate('rentals_status_returned');
+      case RentalStatus.unknown:
+      default:
+        return loc.translate('rentals_status_unknown');
+    }
   }
 }

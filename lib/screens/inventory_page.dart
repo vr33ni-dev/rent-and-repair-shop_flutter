@@ -12,38 +12,183 @@ class InventoryPage extends StatefulWidget {
 
 class _InventoryPageState extends State<InventoryPage> {
   late Future<List<Surfboard>> _boardsFuture;
+
+  // ── filter state ─────────────────────────────────────
   bool _showOnlyAvailable = true;
   bool _showOnlyShopOwned = true;
+  String _searchTerm = '';
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _boardsFuture = ApiService().fetchSurfboards();
+    _loadBoards();
+  }
+
+  void _loadBoards() {
+    setState(() {
+      _boardsFuture = ApiService().fetchSurfboards();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _showAddBoardDialog() async {
+    final formKey = GlobalKey<FormState>();
+    String? name, description, sizeText, issue;
+    bool damaged = false;
+    final local = AppLocalizations.of(context)!;
+
+    await showDialog<void>(
+      context: context,
+      builder:
+          (ctx) => StatefulBuilder(
+            builder:
+                (ctx, setSt) => AlertDialog(
+                  title: Text(local.translate('inventory_add_board')),
+                  content: Form(
+                    key: formKey,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextFormField(
+                            decoration: InputDecoration(
+                              labelText: local.translate(
+                                'inventory_board_name',
+                              ),
+                            ),
+                            validator:
+                                (v) =>
+                                    v == null || v.isEmpty
+                                        ? local.translate(
+                                          'inventory_field_required',
+                                        )
+                                        : null,
+                            onSaved: (v) => name = v?.trim(),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            decoration: InputDecoration(
+                              labelText: local.translate(
+                                'inventory_description',
+                              ),
+                            ),
+                            onSaved: (v) => description = v?.trim(),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            decoration: InputDecoration(
+                              labelText: local.translate('inventory_size'),
+                            ),
+                            onSaved: (v) => sizeText = v?.trim(),
+                          ),
+                          const SizedBox(height: 12),
+                          CheckboxListTile(
+                            title: Text(local.translate('inventory_damaged')),
+                            value: damaged,
+                            onChanged: (v) => setSt(() => damaged = v!),
+                          ),
+                          if (damaged)
+                            TextFormField(
+                              decoration: InputDecoration(
+                                labelText: local.translate(
+                                  'inventory_damage_issue',
+                                ),
+                              ),
+                              validator:
+                                  (v) =>
+                                      v == null || v.isEmpty
+                                          ? local.translate(
+                                            'inventory_field_required',
+                                          )
+                                          : null,
+                              onSaved: (v) => issue = v,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: Text(local.translate('cancel')),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (formKey.currentState!.validate()) {
+                          formKey.currentState!.save();
+                          final ok = await ApiService().createSurfboard(
+                            name: name!,
+                            description: description ?? '',
+                            sizeText: sizeText,
+                            damaged: damaged,
+                            issue: issue ?? '',
+                          );
+                          Navigator.of(ctx).pop();
+                          if (ok) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  local.translate('inventory_board_added'),
+                                ),
+                              ),
+                            );
+                            _loadBoards();
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  local.translate('inventory_error_adding'),
+                                ),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      child: Text(local.translate('inventory_add')),
+                    ),
+                  ],
+                ),
+          ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context);
+    final local = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(localizations.translate('inventory_title')),
+      // appBar: AppBar(title: Text(local.translate('inventory_title'))),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddBoardDialog,
+        child: const Icon(Icons.add),
       ),
       body: FutureBuilder<List<Surfboard>>(
         future: _boardsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+        builder: (ctx, snap) {
+          if (snap.connectionState == ConnectionState.waiting)
             return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('❌ ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
-              child: Text(localizations.translate('inventory_no_boards')),
-            );
+          if (snap.hasError) return Center(child: Text('❌ ${snap.error}'));
+
+          // 1) start with all
+          var boards = snap.data ?? [];
+
+          // 2) apply search filter
+          if (_searchTerm.isNotEmpty) {
+            final term = _searchTerm.toLowerCase();
+            boards =
+                boards.where((b) {
+                  return b.name.toLowerCase().contains(term) ||
+                      (b.description?.toLowerCase().contains(term) ?? false);
+                }).toList();
           }
 
-          final allBoards = snapshot.data!;
-          var boards = allBoards;
+          // 3) apply availability/shop‐owned filters
           if (_showOnlyAvailable) {
             boards = boards.where((b) => b.available).toList();
           }
@@ -53,54 +198,107 @@ class _InventoryPageState extends State<InventoryPage> {
 
           return Column(
             children: [
-              SwitchListTile(
-                title: Text(
-                  _showOnlyAvailable
-                      ? localizations.translate('inventory_show_only_available')
-                      : localizations.translate('inventory_include_unavailable'),
-                ),
-                secondary: const Icon(Icons.check_circle_outline),
-                value: _showOnlyAvailable,
-                onChanged: (val) => setState(() => _showOnlyAvailable = val),
+              // ─── Collapsible Filter Panel ───────────────────
+              ExpansionTile(
+                title: Text(local.translate('inventory_filters_title')),
+                childrenPadding: const EdgeInsets.symmetric(vertical: 4),
+                children: [
+                  // Only‐available switch
+                  SwitchListTile(
+                    title: Text(
+                      _showOnlyAvailable
+                          ? local.translate('inventory_show_only_available')
+                          : local.translate('inventory_include_unavailable'),
+                    ),
+                    secondary: const Icon(Icons.check_circle_outline),
+                    value: _showOnlyAvailable,
+                    onChanged: (v) => setState(() => _showOnlyAvailable = v),
+                  ),
+
+                  // Shop‐owned switch
+                  SwitchListTile(
+                    title: Text(
+                      _showOnlyShopOwned
+                          ? local.translate('inventory_show_only_shop_owned')
+                          : local.translate('inventory_include_customer_owned'),
+                    ),
+                    secondary: const Icon(Icons.storefront),
+                    value: _showOnlyShopOwned,
+                    onChanged: (v) => setState(() => _showOnlyShopOwned = v),
+                  ),
+                  // Search field
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        labelText: local.translate('inventory_search'),
+                        prefixIcon: const Icon(Icons.search),
+                        border: const OutlineInputBorder(),
+                      ),
+                      onChanged: (v) => setState(() => _searchTerm = v.trim()),
+                    ),
+                  ),
+                ],
               ),
-              SwitchListTile(
-                title: Text(
-                  _showOnlyShopOwned
-                      ? localizations.translate('inventory_show_only_shop_owned')
-                      : localizations.translate('inventory_include_customer_owned'),
-                ),
-                secondary: const Icon(Icons.storefront),
-                value: _showOnlyShopOwned,
-                onChanged: (val) => setState(() => _showOnlyShopOwned = val),
-              ),
-              const Divider(),
+
+              const Divider(height: 1),
+
+              // ─── Boards List ────────────────────────────────
               Expanded(
-                child: ListView.builder(
-                  itemCount: boards.length,
-                  itemBuilder: (context, index) {
-                    final b = boards[index];
-                    return ListTile(
-                      title: Text(
-                        '${b.name} (ID: ${b.id})',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${localizations.translate('inventory_available')}: ${b.available ? localizations.translate('inventory_available') : localizations.translate('inventory_not_available')}',
+                child:
+                    boards.isEmpty
+                        ? Center(
+                          child: Text(
+                            local.translate('inventory_no_boards_found'),
                           ),
-                          Text(
-                            '${localizations.translate('inventory_damaged')}: ${b.damaged ? localizations.translate('inventory_damaged') : localizations.translate('inventory_not_damaged')}',
-                          ),
-                        ],
-                      ),
-                      trailing: b.shopOwned
-                          ? Text(localizations.translate('inventory_shop_owned'))
-                          : Text(localizations.translate('inventory_customer_owned')),
-                    );
-                  },
-                ),
+                        )
+                        : ListView.builder(
+                          padding: const EdgeInsets.all(8),
+                          itemCount: boards.length,
+                          itemBuilder: (ctx, i) {
+                            final b = boards[i];
+                            return Card(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              child: ListTile(
+                                leading: CircleAvatar(child: Text('${i + 1}')),
+                                title: Text(
+                                  b.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${local.translate('inventory_description')}: '
+                                      '${b.description?.isNotEmpty == true ? b.description : '-'}',
+                                    ),
+                                    Text(
+                                      '${local.translate('inventory_available')}: '
+                                      '${b.available ? local.translate('inventory_available') : local.translate('inventory_not_available')}',
+                                    ),
+                                    Text(
+                                      '${local.translate('inventory_damaged')}: '
+                                      '${b.damaged ? local.translate('inventory_damaged') : local.translate('inventory_not_damaged')}',
+                                    ),
+                                  ],
+                                ),
+                                trailing: Text(
+                                  b.shopOwned
+                                      ? local.translate('inventory_shop_owned')
+                                      : local.translate(
+                                        'inventory_customer_owned',
+                                      ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
               ),
             ],
           );

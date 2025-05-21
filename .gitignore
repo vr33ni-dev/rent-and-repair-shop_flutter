@@ -43,3 +43,20 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+#ios 
+/ios/
+
+# macos
+/macos/
+.flutter-plugins-dependencies
+.flutter-plugins
+rent_and_repair_shop_flutter.iml
+
+# linux
+/linux/flutter/
+ 
+
+# windows
+/windows/
+ ios/Flutter/Debug.xcconfig

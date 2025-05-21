@@ -164,4 +164,27 @@ class ApiService {
     final resp = await http.post(url);
     return resp.statusCode == 200;
   }
+
+  /// Creates a new shop-owned surfboard.
+  Future<bool> createSurfboard({
+    required String name,
+    String? description,
+    String? sizeText,
+    required bool damaged,
+    String? issue,
+  }) async {
+    final url = Uri.parse('$baseUrl/surfboards');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': name,
+        'description': description,
+        if (sizeText != null && sizeText.isNotEmpty) 'sizeText': sizeText,
+        'damaged': damaged,
+        'issue': issue,
+      }),
+    );
+    return response.statusCode == 200;
+  }
 }
