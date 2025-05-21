@@ -28,6 +28,12 @@ class _RentalsPageState extends State<RentalsPage> {
   @override
   void initState() {
     super.initState();
+    // default to the last 30 days:
+    final now = DateTime.now();
+    _filterRange = DateTimeRange(
+      start: now.subtract(const Duration(days: 30)),
+      end: now,
+    );
     _loadData();
   }
 
