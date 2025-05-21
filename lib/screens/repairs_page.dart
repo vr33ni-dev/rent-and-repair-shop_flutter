@@ -427,14 +427,7 @@ class _RepairsPageState extends State<RepairsPage> {
                                           ),
                                         ),
                                       ]
-                                      : [
-                                        Text(
-                                          statusText,
-                                          style: const TextStyle(
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        ),
-                                      ],
+                                      : [Text(statusText)],
                             ),
                           ],
                         ),

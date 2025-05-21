@@ -31,6 +31,7 @@
   "rentals_damage_description": "Descripción del daño",
   "rentals_repair_price": "Costo de reparación",
   "rentals_fee": "Costo de alquiler",
+  "rentals_total_fee": "Costo total",
   "rentals_pick_range": "Seleccione un rango",
   "rentals_filter_by_date": "Filtrar por fecha",
   "rentals_clear_date_filter": "Limpiar filtro de fecha",
