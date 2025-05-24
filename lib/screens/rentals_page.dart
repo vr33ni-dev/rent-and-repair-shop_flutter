@@ -289,99 +289,112 @@ class _RentalsPageState extends State<RentalsPage>
       body: Column(
         children: [
           // ─── Collapsible Filter Panel ─────────────────────────
-          ExpansionTile(
-            title: Text(loc.translate('rentals_filters_title')),
-            childrenPadding: const EdgeInsets.symmetric(vertical: 4),
-            children: [
-              // Date‐Range Row
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _filterRange == null
-                            ? loc.translate('rentals_filter_by_date')
-                            : '${df.format(_filterRange!.start)} → ${df.format(_filterRange!.end)}',
-                      ),
-                    ),
-                    if (_filterRange != null)
-                      IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: _clearDateRange,
-                      ),
-                    IconButton(
-                      icon: const Icon(Icons.date_range),
-                      onPressed: _pickDateRange,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Sort Dropdown
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                child: DropdownButton<_SortOrder>(
-                  value: _sortOrder,
-                  isExpanded: true,
-                  onChanged:
-                      (v) => setState(() {
-                        if (v != null) _sortOrder = v;
-                      }),
-                  items: [
-                    DropdownMenuItem(
-                      value: _SortOrder.newestFirst,
-                      child: Text(loc.translate('rentals_sort_newest')),
-                    ),
-                    DropdownMenuItem(
-                      value: _SortOrder.oldestFirst,
-                      child: Text(loc.translate('rentals_sort_oldest')),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Active‐only Switch
-              SwitchListTile(
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Material(
+              elevation: 1,
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.grey.shade50,
+              child: ExpansionTile(
                 title: Text(
-                  _showHistory
-                      ? loc.translate('rentals_filter_show_all')
-                      : loc.translate('rentals_filter_active_only'),
-                ),
-                secondary: const Icon(Icons.filter_list),
-                value: _showHistory,
-                onChanged: (v) => setState(() => _showHistory = v),
-              ),
-
-              // Search Field
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                child: TextField(
-                  controller: _searchCtrl,
-                  decoration: InputDecoration(
-                    labelText: loc.translate('rentals_search'),
-                    prefixIcon: const Icon(Icons.search),
-                    border: const OutlineInputBorder(),
+                  loc.translate('rentals_filters_title'),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
                   ),
-                  onChanged:
-                      (v) =>
-                          setState(() => _searchTerm = v.trim().toLowerCase()),
                 ),
+                childrenPadding: const EdgeInsets.symmetric(vertical: 4),
+                children: [
+                  // your filters: switches & search box here
+                  // Date‐Range Row
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _filterRange == null
+                                ? loc.translate('rentals_filter_by_date')
+                                : '${df.format(_filterRange!.start)} → ${df.format(_filterRange!.end)}',
+                          ),
+                        ),
+                        if (_filterRange != null)
+                          IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: _clearDateRange,
+                          ),
+                        IconButton(
+                          icon: const Icon(Icons.date_range),
+                          onPressed: _pickDateRange,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Sort Dropdown
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: DropdownButton<_SortOrder>(
+                      value: _sortOrder,
+                      isExpanded: true,
+                      onChanged:
+                          (v) => setState(() {
+                            if (v != null) _sortOrder = v;
+                          }),
+                      items: [
+                        DropdownMenuItem(
+                          value: _SortOrder.newestFirst,
+                          child: Text(loc.translate('rentals_sort_newest')),
+                        ),
+                        DropdownMenuItem(
+                          value: _SortOrder.oldestFirst,
+                          child: Text(loc.translate('rentals_sort_oldest')),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Active‐only Switch
+                  SwitchListTile(
+                    title: Text(
+                      _showHistory
+                          ? loc.translate('rentals_filter_show_all')
+                          : loc.translate('rentals_filter_active_only'),
+                    ),
+                    secondary: const Icon(Icons.filter_list),
+                    value: _showHistory,
+                    onChanged: (v) => setState(() => _showHistory = v),
+                  ),
+
+                  // Search Field
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: TextField(
+                      controller: _searchCtrl,
+                      decoration: InputDecoration(
+                        labelText: loc.translate('rentals_search'),
+                        prefixIcon: const Icon(Icons.search),
+                        border: const OutlineInputBorder(),
+                      ),
+                      onChanged:
+                          (v) => setState(
+                            () => _searchTerm = v.trim().toLowerCase(),
+                          ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-
-          const Divider(height: 1),
-
           // ─── Results List ──────────────────────────────────────
           Expanded(
             child: FutureBuilder<List<RentalResponse>>(

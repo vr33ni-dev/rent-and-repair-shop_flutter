@@ -185,8 +185,6 @@ class _BillsPageState extends State<BillsPage>
               // ─── collapsible filter panel ─────────────────
               _buildFilterPanel(loc, df),
 
-              const Divider(height: 1),
-
               // ─── bills list (or “no bills”) ───────────────
               if (list.isEmpty)
                 Expanded(
@@ -324,86 +322,103 @@ class _BillsPageState extends State<BillsPage>
 
   /// the ExpansionTile at the top
   Widget _buildFilterPanel(AppLocalizations loc, DateFormat df) {
-    return ExpansionTile(
-      title: Text(loc.translate('bills_filters_title')),
-      childrenPadding: const EdgeInsets.symmetric(vertical: 4),
-      children: [
-        // date range row
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  _filterRange == null
-                      ? loc.translate('bills_filter_by_date')
-                      : '${df.format(_filterRange!.start)} → '
-                          '${df.format(_filterRange!.end)}',
-                ),
-              ),
-              if (_filterRange != null)
-                IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: _clearDateRange,
-                ),
-              IconButton(
-                icon: const Icon(Icons.date_range),
-                onPressed: _pickDateRange,
-              ),
-            ],
-          ),
-        ),
+    // ─── Collapsible Filter Panel ───────────────────
 
-        // sort dropdown
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: DropdownButton<_SortOrder>(
-            value: _sortOrder,
-            isExpanded: true,
-            onChanged:
-                (v) => setState(() {
-                  if (v != null) _sortOrder = v;
-                }),
-            items: [
-              DropdownMenuItem(
-                value: _SortOrder.newestFirst,
-                child: Text(loc.translate('bills_sort_newest')),
-              ),
-              DropdownMenuItem(
-                value: _SortOrder.oldestFirst,
-                child: Text(loc.translate('bills_sort_oldest')),
-              ),
-            ],
-          ),
-        ),
-
-        // unpaid‐only switch
-        SwitchListTile(
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Material(
+        elevation: 1,
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.grey.shade50,
+        child: ExpansionTile(
           title: Text(
-            _showOnlyUnpaid
-                ? loc.translate('bills_filter_unpaid_only')
-                : loc.translate('bills_filter_include_paid'),
-          ),
-          secondary: const Icon(Icons.money_off),
-          value: _showOnlyUnpaid,
-          onChanged: (v) => setState(() => _showOnlyUnpaid = v),
-        ),
-
-        // search box
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              labelText: loc.translate('bills_search'),
-              prefixIcon: const Icon(Icons.search),
-              border: const OutlineInputBorder(),
+            loc.translate('bills_filters_title'),
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
             ),
-            onChanged:
-                (v) => setState(() => _searchTerm = v.trim().toLowerCase()),
           ),
+          childrenPadding: const EdgeInsets.symmetric(vertical: 4),
+          children: [
+            // your filter widgets (date range, dropdown, switch, search)
+            // date range row
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _filterRange == null
+                          ? loc.translate('bills_filter_by_date')
+                          : '${df.format(_filterRange!.start)} → '
+                              '${df.format(_filterRange!.end)}',
+                    ),
+                  ),
+                  if (_filterRange != null)
+                    IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: _clearDateRange,
+                    ),
+                  IconButton(
+                    icon: const Icon(Icons.date_range),
+                    onPressed: _pickDateRange,
+                  ),
+                ],
+              ),
+            ),
+
+            // sort dropdown
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: DropdownButton<_SortOrder>(
+                value: _sortOrder,
+                isExpanded: true,
+                onChanged:
+                    (v) => setState(() {
+                      if (v != null) _sortOrder = v;
+                    }),
+                items: [
+                  DropdownMenuItem(
+                    value: _SortOrder.newestFirst,
+                    child: Text(loc.translate('bills_sort_newest')),
+                  ),
+                  DropdownMenuItem(
+                    value: _SortOrder.oldestFirst,
+                    child: Text(loc.translate('bills_sort_oldest')),
+                  ),
+                ],
+              ),
+            ),
+
+            // unpaid‐only switch
+            SwitchListTile(
+              title: Text(
+                _showOnlyUnpaid
+                    ? loc.translate('bills_filter_unpaid_only')
+                    : loc.translate('bills_filter_include_paid'),
+              ),
+              secondary: const Icon(Icons.money_off),
+              value: _showOnlyUnpaid,
+              onChanged: (v) => setState(() => _showOnlyUnpaid = v),
+            ),
+
+            // search box
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  labelText: loc.translate('bills_search'),
+                  prefixIcon: const Icon(Icons.search),
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged:
+                    (v) => setState(() => _searchTerm = v.trim().toLowerCase()),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

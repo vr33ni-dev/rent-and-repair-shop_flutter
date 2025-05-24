@@ -219,100 +219,112 @@ class _RepairsPageState extends State<RepairsPage>
       body: Column(
         children: [
           // ─── collapsible filter panel ───────────────────────
-          ExpansionTile(
-            title: Text(
-              loc.translate('repairs_filters_title'),
-            ), // e.g. “Filters & Sort”
-            childrenPadding: const EdgeInsets.symmetric(vertical: 4),
-            children: [
-              // Date‐range row
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _filterRange == null
-                            ? loc.translate('repairs_filter_by_date')
-                            : '${dateFormat.format(_filterRange!.start)} → ${dateFormat.format(_filterRange!.end)}',
-                      ),
-                    ),
-                    if (_filterRange != null)
-                      IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: _clearDateRange,
-                      ),
-                    IconButton(
-                      icon: const Icon(Icons.date_range),
-                      onPressed: _pickDateRange,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Sort dropdown
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                child: DropdownButton<_SortOrder>(
-                  value: _sortOrder,
-                  isExpanded: true,
-                  onChanged:
-                      (v) => setState(() {
-                        if (v != null) _sortOrder = v;
-                      }),
-                  items: [
-                    DropdownMenuItem(
-                      value: _SortOrder.newestFirst,
-                      child: Text(loc.translate('repairs_sort_newest')),
-                    ),
-                    DropdownMenuItem(
-                      value: _SortOrder.oldestFirst,
-                      child: Text(loc.translate('repairs_sort_oldest')),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Active‐only switch
-              SwitchListTile(
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Material(
+              elevation: 1,
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.grey.shade50,
+              child: ExpansionTile(
                 title: Text(
-                  _showAll
-                      ? loc.translate('repairs_filter_active_only')
-                      : loc.translate('repairs_filter_show_all'),
-                ),
-                secondary: const Icon(Icons.filter_list),
-                value: _showAll,
-                onChanged: (v) => setState(() => _showAll = v),
-              ),
-
-              // Search field
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    labelText: loc.translate('repairs_search'),
-                    prefixIcon: const Icon(Icons.search),
-                    border: const OutlineInputBorder(),
+                  loc.translate('repairs_filters_title'),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
                   ),
-                  onChanged:
-                      (v) =>
-                          setState(() => _searchTerm = v.trim().toLowerCase()),
                 ),
-              ),
-            ],
-          ),
+                childrenPadding: const EdgeInsets.symmetric(vertical: 4),
+                children: [
+                  // your filters: switches & search box here
+                  // Date‐range row
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _filterRange == null
+                                ? loc.translate('repairs_filter_by_date')
+                                : '${dateFormat.format(_filterRange!.start)} → ${dateFormat.format(_filterRange!.end)}',
+                          ),
+                        ),
+                        if (_filterRange != null)
+                          IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: _clearDateRange,
+                          ),
+                        IconButton(
+                          icon: const Icon(Icons.date_range),
+                          onPressed: _pickDateRange,
+                        ),
+                      ],
+                    ),
+                  ),
 
-          const Divider(height: 1),
+                  // Sort dropdown
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: DropdownButton<_SortOrder>(
+                      value: _sortOrder,
+                      isExpanded: true,
+                      onChanged:
+                          (v) => setState(() {
+                            if (v != null) _sortOrder = v;
+                          }),
+                      items: [
+                        DropdownMenuItem(
+                          value: _SortOrder.newestFirst,
+                          child: Text(loc.translate('repairs_sort_newest')),
+                        ),
+                        DropdownMenuItem(
+                          value: _SortOrder.oldestFirst,
+                          child: Text(loc.translate('repairs_sort_oldest')),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Active‐only switch
+                  SwitchListTile(
+                    title: Text(
+                      _showAll
+                          ? loc.translate('repairs_filter_active_only')
+                          : loc.translate('repairs_filter_show_all'),
+                    ),
+                    secondary: const Icon(Icons.filter_list),
+                    value: _showAll,
+                    onChanged: (v) => setState(() => _showAll = v),
+                  ),
+
+                  // Search field
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        labelText: loc.translate('repairs_search'),
+                        prefixIcon: const Icon(Icons.search),
+                        border: const OutlineInputBorder(),
+                      ),
+                      onChanged:
+                          (v) => setState(
+                            () => _searchTerm = v.trim().toLowerCase(),
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
 
           // ─── results list ────────────────────────
           Expanded(

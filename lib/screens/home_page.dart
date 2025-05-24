@@ -1,5 +1,6 @@
 // lib/screens/home_page.dart
 import 'package:flutter/material.dart';
+import 'package:rent_and_repair_shop_flutter/screens/settings_page.dart';
 import '../l10n/app_localizations.dart';
 import 'rentals_page.dart';
 import 'repairs_page.dart';
@@ -19,40 +20,46 @@ class HomePage extends StatelessWidget {
       length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(loc.translate('title')),
+          title: null, // no title
+          backgroundColor: Colors.white,
+          elevation: 1,
+          iconTheme: const IconThemeData(color: Colors.teal),
           actions: [
-            DropdownButton<String>(
-              value: Localizations.localeOf(context).languageCode,
-              icon: const Icon(Icons.language, color: Colors.white),
-              dropdownColor: Colors.teal,
-              onChanged: (lang) => lang != null ? onLanguageChange(lang) : null,
-              items: const [
-                DropdownMenuItem(value: 'es', child: Text('ES')),
-                DropdownMenuItem(value: 'en', child: Text('EN')),
-              ],
+            IconButton(
+              icon: const Icon(Icons.settings),
+              tooltip: 'Settings',
+              onPressed: () async {
+                final selectedLang = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SettingsPage()),
+                );
+
+                if (selectedLang != null) {
+                  onLanguageChange(selectedLang);
+                }
+              },
             ),
           ],
           bottom: TabBar(
+            indicatorColor: Colors.teal,
+            labelColor: Colors.teal,
+            unselectedLabelColor: Colors.grey,
+            labelStyle: const TextStyle(fontWeight: FontWeight.w600),
             tabs: [
               Tab(
-                icon: const Icon(Icons.assignment),
+                icon: Icon(Icons.assignment),
                 text: loc.translate('home_rentals'),
               ),
+              Tab(icon: Icon(Icons.build), text: loc.translate('home_repairs')),
               Tab(
-                icon: const Icon(Icons.build),
-                text: loc.translate('home_repairs'),
-              ),
-              Tab(
-                icon: const Icon(Icons.inventory),
+                icon: Icon(Icons.inventory),
                 text: loc.translate('home_inventory'),
               ),
-              Tab(
-                icon: const Icon(Icons.money),
-                text: loc.translate('home_bills'),
-              ),
+              Tab(icon: Icon(Icons.money), text: loc.translate('home_bills')),
             ],
           ),
         ),
+
         body: SafeArea(
           child: const TabBarView(
             children: [

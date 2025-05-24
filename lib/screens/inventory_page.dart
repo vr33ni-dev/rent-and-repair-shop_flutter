@@ -204,53 +204,75 @@ class _InventoryPageState extends State<InventoryPage>
           return Column(
             children: [
               // ─── Collapsible Filter Panel ───────────────────
-              ExpansionTile(
-                title: Text(local.translate('inventory_filters_title')),
-                childrenPadding: const EdgeInsets.symmetric(vertical: 4),
-                children: [
-                  // Only‐available switch
-                  SwitchListTile(
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Material(
+                  elevation: 1,
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.grey.shade50,
+                  child: ExpansionTile(
                     title: Text(
-                      _showOnlyAvailable
-                          ? local.translate('inventory_show_only_available')
-                          : local.translate('inventory_include_unavailable'),
-                    ),
-                    secondary: const Icon(Icons.check_circle_outline),
-                    value: _showOnlyAvailable,
-                    onChanged: (v) => setState(() => _showOnlyAvailable = v),
-                  ),
-
-                  // Shop‐owned switch
-                  SwitchListTile(
-                    title: Text(
-                      _showOnlyShopOwned
-                          ? local.translate('inventory_show_only_shop_owned')
-                          : local.translate('inventory_include_customer_owned'),
-                    ),
-                    secondary: const Icon(Icons.storefront),
-                    value: _showOnlyShopOwned,
-                    onChanged: (v) => setState(() => _showOnlyShopOwned = v),
-                  ),
-                  // Search field
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        labelText: local.translate('inventory_search'),
-                        prefixIcon: const Icon(Icons.search),
-                        border: const OutlineInputBorder(),
+                      local.translate('inventory_filters_title'),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
                       ),
-                      onChanged: (v) => setState(() => _searchTerm = v.trim()),
                     ),
-                  ),
-                ],
-              ),
+                    childrenPadding: const EdgeInsets.symmetric(vertical: 4),
+                    children: [
+                      // your filters: switches & search box here
+                      // Only‐available switch
+                      SwitchListTile(
+                        title: Text(
+                          _showOnlyAvailable
+                              ? local.translate('inventory_show_only_available')
+                              : local.translate(
+                                'inventory_include_unavailable',
+                              ),
+                        ),
+                        secondary: const Icon(Icons.check_circle_outline),
+                        value: _showOnlyAvailable,
+                        onChanged:
+                            (v) => setState(() => _showOnlyAvailable = v),
+                      ),
 
-              const Divider(height: 1),
+                      // Shop‐owned switch
+                      SwitchListTile(
+                        title: Text(
+                          _showOnlyShopOwned
+                              ? local.translate(
+                                'inventory_show_only_shop_owned',
+                              )
+                              : local.translate(
+                                'inventory_include_customer_owned',
+                              ),
+                        ),
+                        secondary: const Icon(Icons.storefront),
+                        value: _showOnlyShopOwned,
+                        onChanged:
+                            (v) => setState(() => _showOnlyShopOwned = v),
+                      ),
+                      // Search field
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            labelText: local.translate('inventory_search'),
+                            prefixIcon: const Icon(Icons.search),
+                            border: const OutlineInputBorder(),
+                          ),
+                          onChanged:
+                              (v) => setState(() => _searchTerm = v.trim()),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
               // ─── Boards List ────────────────────────────────
               Expanded(
