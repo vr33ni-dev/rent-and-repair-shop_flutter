@@ -8,6 +8,11 @@
   "settings_title": "Settings",
   "settings_about": "About",
   "settings_about_description": "This is a simple administration panel for managing rentals, repairs, and inventory of surfboards.",
+  "settings_fee_updated": "Rental fee updated!",
+  "settings_fee_update_failed": "Failed to update rental fee.",
+  "settings_rental_fee_label": "Default rental fee",
+  "settings_rental_fee_hint": "Enter fee in USD",
+
   "rentals_title": "Rentals Dashboard",
   "rentals_filters_title": "Filters",
   "rentals_filters_active_only": "Show only active rentals",

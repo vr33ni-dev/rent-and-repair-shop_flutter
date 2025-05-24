@@ -190,4 +190,27 @@ class ApiService {
     );
     return response.statusCode == 200;
   }
+
+  /// Fetch current default rental fee
+  Future<double?> fetchDefaultRentalFee() async {
+    final response = await http.get(Uri.parse('$baseUrl/settings'));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return double.tryParse(data['defaultRentalFee'].toString());
+    } else {
+      print('❌ Failed to fetch rental fee. Status: ${response.statusCode}');
+      return null;
+    }
+  }
+
+  /// Update default rental fee
+  Future<bool> updateDefaultRentalFee(double newFee) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/settings/default_rental_fee'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'value': newFee.toString()}),
+    );
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
 }
