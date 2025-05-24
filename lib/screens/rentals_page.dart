@@ -14,11 +14,7 @@ class RentalsPage extends StatefulWidget {
   State<RentalsPage> createState() => _RentalsPageState();
 }
 
-class _RentalsPageState extends State<RentalsPage>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
-
+class _RentalsPageState extends State<RentalsPage> {
   late Future<List<RentalResponse>> _rentals;
   List<Surfboard> _availableBoards = [];
 
@@ -32,6 +28,7 @@ class _RentalsPageState extends State<RentalsPage>
   @override
   void initState() {
     super.initState();
+    _cacheDefaultFee();
     // default to the last 30 days:
     final now = DateTime.now();
     _filterRange = DateTimeRange(
@@ -39,6 +36,10 @@ class _RentalsPageState extends State<RentalsPage>
       end: now,
     );
     _loadData();
+  }
+
+  Future<void> _cacheDefaultFee() async {
+    await ApiService().fetchDefaultRentalFee();
   }
 
   void _loadData() {
@@ -153,7 +154,9 @@ class _RentalsPageState extends State<RentalsPage>
                             name: name!,
                             contact: contact!,
                             surfboardId: chosenBoard!.id,
-                            rentalFee: 15.0,
+                            rentalFee:
+                                await ApiService().fetchDefaultRentalFee() ??
+                                15.0,
                           );
                           Navigator.of(ctx).pop();
                           if (ok) {
@@ -275,15 +278,18 @@ class _RentalsPageState extends State<RentalsPage>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-
     final loc = AppLocalizations.of(context)!;
     final df = DateFormat('dd/MM/yyyy');
 
     return Scaffold(
       // appBar: AppBar(title: Text(loc.translate('rentals_title'))),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showCreateRentalDialog,
+        onPressed: () async {
+          await ApiService().fetchAvailableSurfboards().then((boards) {
+            setState(() => _availableBoards = boards);
+            _showCreateRentalDialog(); // move inside .then so it uses fresh data
+          });
+        },
         child: const Icon(Icons.add),
       ),
       body: Column(
@@ -505,8 +511,7 @@ class _RentalsPageState extends State<RentalsPage>
                                                 await _showReturnDialog(
                                                   context: context,
                                                   rentedAt: rentedOn,
-                                                  dailyRate:
-                                                      r.rentalFee ?? 15.0,
+                                                  dailyRate: r.rentalFee,
                                                 );
                                             if (result != null) {
                                               await ApiService().returnRental(

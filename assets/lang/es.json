@@ -68,6 +68,7 @@
   "inventory_add": "Agregar",
   "inventory_size": "Tamaño",
   "inventory_error_adding": "No se pudo agregar la tabla",
+    "inventory_board_added": "✅ Tabla agregada",
   "bills_title": "Todas las facturas",
   "bills_filters_title": "Filtros",
   "bills_filter_by_date": "Filtrar por fecha",

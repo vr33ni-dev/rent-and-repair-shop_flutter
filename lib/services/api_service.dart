@@ -10,6 +10,41 @@ class ApiService {
   static final String baseUrl =
       dotenv
           .env['API_URL']!; // 'https://rent-and-repair-shop-spring.onrender.com/api'; //'http://localhost:8080/api';
+  double? _cachedDefaultRentalFee;
+
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() => _instance;
+  ApiService._internal();
+
+  Future<double?> fetchDefaultRentalFee({bool forceRefresh = false}) async {
+    if (_cachedDefaultRentalFee != null && !forceRefresh) {
+      return _cachedDefaultRentalFee;
+    }
+
+    final response = await http.get(Uri.parse('$baseUrl/settings'));
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final fee = double.tryParse(data['defaultRentalFee'].toString());
+      if (fee != null) _cachedDefaultRentalFee = fee;
+      return fee;
+    } else {
+      print('❌ Failed to fetch rental fee. Status: ${response.statusCode}');
+      return null;
+    }
+  }
+
+  Future<bool> updateDefaultRentalFee(double newFee) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/settings/default_rental_fee'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'value': newFee.toString()}),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      _cachedDefaultRentalFee = newFee; // ✅ update cache
+      return true;
+    }
+    return false;
+  }
 
   Future<List<RentalResponse>> fetchRentals() async {
     final url = Uri.parse('$baseUrl/rentals/all');
@@ -189,28 +224,5 @@ class ApiService {
       }),
     );
     return response.statusCode == 200;
-  }
-
-  /// Fetch current default rental fee
-  Future<double?> fetchDefaultRentalFee() async {
-    final response = await http.get(Uri.parse('$baseUrl/settings'));
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return double.tryParse(data['defaultRentalFee'].toString());
-    } else {
-      print('❌ Failed to fetch rental fee. Status: ${response.statusCode}');
-      return null;
-    }
-  }
-
-  /// Update default rental fee
-  Future<bool> updateDefaultRentalFee(double newFee) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/settings/default_rental_fee'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'value': newFee.toString()}),
-    );
-    return response.statusCode == 200 || response.statusCode == 201;
   }
 }

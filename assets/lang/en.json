@@ -69,6 +69,7 @@
   "inventory_size": "Size",
   "inventory_error_adding": "Could not add board",
   "inventory_field_required": "This field is required",
+  "inventory_board_added": "✅ Board added",
   "bills_title": "All Bills",
   "bills_filters_title": "Filters",
   "bills_filter_by_date": "Filter by date",

@@ -10,11 +10,7 @@ class InventoryPage extends StatefulWidget {
   State<InventoryPage> createState() => _InventoryPageState();
 }
 
-class _InventoryPageState extends State<InventoryPage>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
-
+class _InventoryPageState extends State<InventoryPage> {
   late Future<List<Surfboard>> _boardsFuture;
 
   // ── filter state ─────────────────────────────────────
@@ -164,7 +160,6 @@ class _InventoryPageState extends State<InventoryPage>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     final local = AppLocalizations.of(context)!;
 
     return Scaffold(
