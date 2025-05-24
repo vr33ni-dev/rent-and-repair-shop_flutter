@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:rent_and_repair_shop_flutter/models/bill_response.dart';
 import 'package:rent_and_repair_shop_flutter/models/surfboard.dart';
@@ -6,7 +7,9 @@ import '../models/rental_response.dart';
 import '../models/repair_response.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8080/api';
+  static final String baseUrl =
+      dotenv
+          .env['API_URL']!; // 'https://rent-and-repair-shop-spring.onrender.com/api'; //'http://localhost:8080/api';
 
   Future<List<RentalResponse>> fetchRentals() async {
     final url = Uri.parse('$baseUrl/rentals/all');

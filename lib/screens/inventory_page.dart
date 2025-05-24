@@ -10,7 +10,11 @@ class InventoryPage extends StatefulWidget {
   State<InventoryPage> createState() => _InventoryPageState();
 }
 
-class _InventoryPageState extends State<InventoryPage> {
+class _InventoryPageState extends State<InventoryPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   late Future<List<Surfboard>> _boardsFuture;
 
   // ── filter state ─────────────────────────────────────
@@ -160,6 +164,7 @@ class _InventoryPageState extends State<InventoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final local = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -259,21 +264,35 @@ class _InventoryPageState extends State<InventoryPage> {
                         : ListView.builder(
                           padding: const EdgeInsets.all(8),
                           itemCount: boards.length,
+
                           itemBuilder: (ctx, i) {
                             final b = boards[i];
                             return Card(
                               margin: const EdgeInsets.symmetric(vertical: 4),
-                              child: ListTile(
-                                leading: CircleAvatar(child: Text('${i + 1}')),
-                                title: Text(
-                                  b.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                subtitle: Column(
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    // Header row
+                                    Row(
+                                      children: [
+                                        CircleAvatar(child: Text('${i + 1}')),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            b.name,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+
+                                    // Description and info
                                     Text(
                                       '${local.translate('inventory_description')}: '
                                       '${b.description?.isNotEmpty == true ? b.description : '-'}',
@@ -286,14 +305,23 @@ class _InventoryPageState extends State<InventoryPage> {
                                       '${local.translate('inventory_damaged')}: '
                                       '${b.damaged ? local.translate('inventory_damaged') : local.translate('inventory_not_damaged')}',
                                     ),
-                                  ],
-                                ),
-                                trailing: Text(
-                                  b.shopOwned
-                                      ? local.translate('inventory_shop_owned')
-                                      : local.translate(
-                                        'inventory_customer_owned',
+
+                                    const SizedBox(height: 12),
+
+                                    // Bottom right alignment for ownership info
+                                    Align(
+                                      alignment: Alignment.bottomRight,
+                                      child: Text(
+                                        b.shopOwned
+                                            ? local.translate(
+                                              'inventory_shop_owned',
+                                            )
+                                            : local.translate(
+                                              'inventory_customer_owned',
+                                            ),
                                       ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             );

@@ -11,6 +11,8 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+.env.*
+
 
 # IntelliJ related
 *.iml
@@ -44,19 +46,36 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-#ios 
-/ios/
-
 # macos
 /macos/
 .flutter-plugins-dependencies
 .flutter-plugins
 rent_and_repair_shop_flutter.iml
+macos/Flutter/Flutter-Debug.xcconfig
+macos/Flutter/Flutter-Release.xcconfig
+macos/Flutter/GeneratedPluginRegistrant.swift
+
 
 # linux
 /linux/flutter/
- 
+ linux/flutter/generated_plugin_registrant.cc
+linux/flutter/generated_plugins.cmake
 
 # windows
 /windows/
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugins.cmake
+
+#ios 
+/ios/Flutter
  ios/Flutter/Debug.xcconfig
+ios/Flutter/Debug.xcconfig
+ios/Podfile
+ios/Podfile.lock
+ios/Flutter/Debug.xcconfig
+ios/Flutter/Release.xcconfig
+ios/Runner.xcodeproj/project.pbxproj
+ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
+ios/Runner.xcworkspace/contents.xcworkspacedata
+
+

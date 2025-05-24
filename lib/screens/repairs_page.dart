@@ -14,7 +14,11 @@ class RepairsPage extends StatefulWidget {
   State<RepairsPage> createState() => _RepairsPageState();
 }
 
-class _RepairsPageState extends State<RepairsPage> {
+class _RepairsPageState extends State<RepairsPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   late Future<List<RepairResponse>> _repairs;
   bool _showAll = false;
   _SortOrder _sortOrder = _SortOrder.newestFirst;
@@ -201,6 +205,8 @@ class _RepairsPageState extends State<RepairsPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     final loc = AppLocalizations.of(context);
     final dateFormat = DateFormat('dd/MM/yyyy');
 

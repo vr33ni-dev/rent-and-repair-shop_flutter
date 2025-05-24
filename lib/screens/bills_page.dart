@@ -19,7 +19,11 @@ class BillsPage extends StatefulWidget {
   State<BillsPage> createState() => _BillsPageState();
 }
 
-class _BillsPageState extends State<BillsPage> {
+class _BillsPageState extends State<BillsPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   late Future<List<BillResponse>> _bills;
 
   // ─── filter & sort state ─────────────────────────
@@ -153,11 +157,17 @@ class _BillsPageState extends State<BillsPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final loc = AppLocalizations.of(context)!;
     final df = DateFormat('dd/MM/yyyy');
 
     return Scaffold(
       // appBar: AppBar(title: Text(loc.translate('bills_title'))),
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.download),
+        label: Text(loc.translate('bills_export_csv')),
+        onPressed: _exportCsv,
+      ),
       body: FutureBuilder<List<BillResponse>>(
         future: _bills,
         builder: (ctx, snap) {
@@ -175,18 +185,7 @@ class _BillsPageState extends State<BillsPage> {
               // ─── collapsible filter panel ─────────────────
               _buildFilterPanel(loc, df),
 
-              // ─── export CSV button ────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.download),
-                  label: Text(loc.translate('bills_export_csv')),
-                  onPressed: _exportCsv,
-                ),
-              ),
+              const Divider(height: 1),
 
               // ─── bills list (or “no bills”) ───────────────
               if (list.isEmpty)
@@ -303,6 +302,19 @@ class _BillsPageState extends State<BillsPage> {
                     },
                   ),
                 ),
+
+              // // ─── export CSV button ────────────────────────
+              // Padding(
+              //   padding: const EdgeInsets.symmetric(
+              //     horizontal: 16,
+              //     vertical: 4,
+              //   ),
+              //   child: ElevatedButton.icon(
+              //     icon: const Icon(Icons.download),
+              //     label: Text(loc.translate('bills_export_csv')),
+              //     onPressed: _exportCsv,
+              //   ),
+              // ),
             ],
           );
         },

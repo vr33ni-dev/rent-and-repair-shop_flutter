@@ -14,7 +14,11 @@ class RentalsPage extends StatefulWidget {
   State<RentalsPage> createState() => _RentalsPageState();
 }
 
-class _RentalsPageState extends State<RentalsPage> {
+class _RentalsPageState extends State<RentalsPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   late Future<List<RentalResponse>> _rentals;
   List<Surfboard> _availableBoards = [];
 
@@ -271,6 +275,8 @@ class _RentalsPageState extends State<RentalsPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     final loc = AppLocalizations.of(context)!;
     final df = DateFormat('dd/MM/yyyy');
 

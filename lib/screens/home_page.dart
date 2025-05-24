@@ -27,8 +27,8 @@ class HomePage extends StatelessWidget {
               dropdownColor: Colors.teal,
               onChanged: (lang) => lang != null ? onLanguageChange(lang) : null,
               items: const [
-                DropdownMenuItem(value: 'es', child: Text('Español')),
-                DropdownMenuItem(value: 'en', child: Text('English')),
+                DropdownMenuItem(value: 'es', child: Text('ES')),
+                DropdownMenuItem(value: 'en', child: Text('EN')),
               ],
             ),
           ],
