@@ -14,6 +14,7 @@ class BillResponse {
   final DateTime billCreatedAt;
   final DateTime? billPaidAt;
   final DateTime? rentalDate;
+  final DateTime? rentalReturnDate;
   final DateTime? repairDate;
 
   BillResponse({
@@ -32,6 +33,7 @@ class BillResponse {
     required this.billCreatedAt,
     this.billPaidAt,
     this.rentalDate,
+    this.rentalReturnDate,
     this.repairDate,
   });
 
@@ -47,6 +49,7 @@ class BillResponse {
       customerContactType: json['customerContactType'] as String? ?? '',
       description: json['description'] as String? ?? '',
       rentalDate: parseDate(json['rentalDate'] as String?),
+      rentalReturnDate: parseDate(json['rentalReturnDate'] as String?),
       repairDate: parseDate(json['repairDate'] as String?),
       billCreatedAt: DateTime.parse(json['billCreatedAt'] as String),
       billPaidAt: parseDate(json['billPaidAt'] as String?),

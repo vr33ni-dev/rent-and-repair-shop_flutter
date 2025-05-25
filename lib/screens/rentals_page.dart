@@ -459,7 +459,7 @@ class _RentalsPageState extends State<RentalsPage> {
                   itemCount: list.length,
                   itemBuilder: (ctx, i) {
                     final r = list[i];
-                    final rentedOn = DateTime.parse(r.rentedAt);
+                    final rentedAt = DateTime.parse(r.rentedAt);
                     final statusText = r.status.localized(loc);
 
                     return Card(
@@ -489,9 +489,26 @@ class _RentalsPageState extends State<RentalsPage> {
                             Text(
                               '${loc.translate('rentals_status_label')}: $statusText',
                             ),
-                            Text(
-                              '${loc.translate('rentals_status_created')}: ${df.format(rentedOn)}',
-                            ),
+
+                            Text(() {
+                              final returnedAt =
+                                  r.returnedAt != null
+                                      ? DateTime.parse(r.returnedAt!)
+                                      : null;
+
+                              final sameDay =
+                                  returnedAt != null &&
+                                  rentedAt.year == returnedAt.year &&
+                                  rentedAt.month == returnedAt.month &&
+                                  rentedAt.day == returnedAt.day;
+
+                              if (returnedAt == null || sameDay) {
+                                return '${loc.translate('rentals_status_created')}: ${df.format(rentedAt)}';
+                              } else {
+                                return '${loc.translate('rentals_period_label')}: ${df.format(rentedAt)} – ${df.format(returnedAt)}';
+                              }
+                            }()),
+
                             if (r.returnedAt != null) ...[
                               const SizedBox(height: 8),
                               Text(
@@ -510,7 +527,7 @@ class _RentalsPageState extends State<RentalsPage> {
                                             final result =
                                                 await _showReturnDialog(
                                                   context: context,
-                                                  rentedAt: rentedOn,
+                                                  rentedAt: rentedAt,
                                                   dailyRate: r.rentalFee,
                                                 );
                                             if (result != null) {

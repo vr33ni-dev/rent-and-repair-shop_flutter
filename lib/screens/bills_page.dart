@@ -226,10 +226,22 @@ class _BillsPageState extends State<BillsPage> {
                               const SizedBox(height: 8),
                               // dates
                               if (b.rentalDate != null)
-                                Text(
-                                  '${loc.translate('bills_rental_creation_date')}: '
-                                  '${df.format(b.rentalDate!)}',
-                                ),
+                                Text(() {
+                                  final df = DateFormat('dd/MM/yyyy');
+                                  final rentedAt =
+                                      b.rentalDate!; // already DateTime
+                                  final returnedAt = b.rentalReturnDate;
+
+                                  if (returnedAt == null ||
+                                      (rentedAt.year == returnedAt.year &&
+                                          rentedAt.month == returnedAt.month &&
+                                          rentedAt.day == returnedAt.day)) {
+                                    return '${loc.translate('bills_rental_creation_date')}: ${df.format(rentedAt)}';
+                                  } else {
+                                    return '${loc.translate('rentals_period_label')}: ${df.format(rentedAt)} – ${df.format(returnedAt)}';
+                                  }
+                                }()),
+
                               if (b.repairDate != null)
                                 Text(
                                   '${loc.translate('bills_repair_creation_date')}: '
