@@ -37,6 +37,10 @@ dependencies:
   share_plus: ^11.0.0
   path_provider: ^2.1.5
   flutter_dotenv: ^5.2.1
+  image_picker: ^1.1.2
+  http: ^1.4.0
+  cloudinary_url_gen: ^1.0.0
+  cloudinary_api: ^1.0.0
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -46,7 +50,6 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  http: ^0.13.6
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
@@ -69,6 +72,7 @@ flutter:
     - assets/lang/es.json
     - .env.production
     - .env.local
+    - assets/images/placeholder_board.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

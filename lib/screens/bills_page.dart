@@ -103,7 +103,7 @@ class _BillsPageState extends State<BillsPage> {
 
   /// builds & shares a CSV of the currently filtered+sorted bills
   Future<void> _exportCsv() async {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final all = await _bills;
     final filtered = _applyFiltersAndSort(all);
 
@@ -153,7 +153,7 @@ class _BillsPageState extends State<BillsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final df = DateFormat('dd/MM/yyyy');
 
     return Scaffold(

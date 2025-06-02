@@ -1,4 +1,10 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:rent_and_repair_shop_flutter/l10n/app_localizations.dart';
 import '../models/surfboard.dart';
 import '../services/api_service.dart';
@@ -39,9 +45,26 @@ class _InventoryPageState extends State<InventoryPage> {
 
   Future<void> _showAddBoardDialog() async {
     final formKey = GlobalKey<FormState>();
-    String? name, description, sizeText, issue;
+    String? name, description, sizeText, issue, imageUrl;
     bool damaged = false;
-    final local = AppLocalizations.of(context)!;
+    File? pickedImage;
+    final picker = ImagePicker();
+    final local = AppLocalizations.of(context);
+
+    Future<void> pickImage(StateSetter setSt) async {
+      // 1) Try the camera first
+      XFile? image = await picker.pickImage(source: ImageSource.camera);
+
+      // 2) If on Simulator (camera returns null), fall back to gallery
+      image ??= await picker.pickImage(source: ImageSource.gallery);
+
+      // 3) If we got something (camera or gallery), update pickedImage
+      if (image != null) {
+        setSt(() {
+          pickedImage = File(image!.path);
+        });
+      }
+    }
 
     await showDialog<void>(
       context: context,
@@ -88,6 +111,22 @@ class _InventoryPageState extends State<InventoryPage> {
                             onSaved: (v) => sizeText = v?.trim(),
                           ),
                           const SizedBox(height: 12),
+                          ElevatedButton.icon(
+                            onPressed: () => pickImage(setSt),
+                            icon: const Icon(Icons.camera_alt),
+                            label: Text(
+                              local.translate('inventory_take_photo'),
+                            ),
+                          ),
+                          if (pickedImage != null) ...[
+                            const SizedBox(height: 12),
+                            Image.file(
+                              pickedImage!,
+                              height: 100,
+                              fit: BoxFit.cover,
+                            ),
+                          ],
+                          const SizedBox(height: 12),
                           CheckboxListTile(
                             title: Text(local.translate('inventory_damaged')),
                             value: damaged,
@@ -122,13 +161,27 @@ class _InventoryPageState extends State<InventoryPage> {
                       onPressed: () async {
                         if (formKey.currentState!.validate()) {
                           formKey.currentState!.save();
+
+                          if (pickedImage != null) {
+                            final isProd = dotenv.env['ENV'] == 'production';
+
+                            if (isProd) {
+                              imageUrl = await ApiService()
+                                  .uploadImageToCloudinary(pickedImage!);
+                            } else {
+                              imageUrl = pickedImage!.path;
+                            }
+                          }
+
                           final ok = await ApiService().createSurfboard(
                             name: name!,
                             description: description ?? '',
                             sizeText: sizeText,
+                            imageUrl: imageUrl,
                             damaged: damaged,
                             issue: issue ?? '',
                           );
+
                           Navigator.of(ctx).pop();
                           if (ok) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -160,7 +213,7 @@ class _InventoryPageState extends State<InventoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    final local = AppLocalizations.of(context)!;
+    final local = AppLocalizations.of(context);
 
     return Scaffold(
       // appBar: AppBar(title: Text(local.translate('inventory_title'))),
@@ -171,8 +224,9 @@ class _InventoryPageState extends State<InventoryPage> {
       body: FutureBuilder<List<Surfboard>>(
         future: _boardsFuture,
         builder: (ctx, snap) {
-          if (snap.connectionState == ConnectionState.waiting)
+          if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          }
           if (snap.hasError) return Center(child: Text('❌ ${snap.error}'));
 
           // 1) start with all
@@ -288,57 +342,111 @@ class _InventoryPageState extends State<InventoryPage> {
                               margin: const EdgeInsets.symmetric(vertical: 4),
                               child: Padding(
                                 padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Header row
-                                    Row(
-                                      children: [
-                                        CircleAvatar(child: Text('${i + 1}')),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Text(
-                                            b.name,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // ─── Left: Info Text ──────────────────────────────────
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // Header row
+                                            Row(
+                                              children: [
+                                                CircleAvatar(
+                                                  child: Text('${i + 1}'),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Text(
+                                                    b.name,
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              '${local.translate('inventory_description')}: ${b.description?.isNotEmpty == true ? b.description : '-'}',
+                                            ),
+                                            Text(
+                                              '${local.translate('inventory_size')}: ${b.sizeText ?? local.translate('inventory_size_not_specified')}',
+                                            ),
+                                            Text(
+                                              '${local.translate('inventory_available')}: ${b.available ? local.translate('inventory_available') : local.translate('inventory_not_available')}',
+                                            ),
+                                            Text(
+                                              '${local.translate('inventory_damaged')}: ${b.damaged ? local.translate('inventory_damaged') : local.translate('inventory_not_damaged')}',
+                                            ),
+
+                                            const SizedBox(height: 8),
+                                            Align(
+                                              alignment: Alignment.bottomLeft,
+                                              child: Text(
+                                                b.shopOwned
+                                                    ? local.translate(
+                                                      'inventory_shop_owned',
+                                                    )
+                                                    : local.translate(
+                                                      'inventory_customer_owned',
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-
-                                    // Description and info
-                                    Text(
-                                      '${local.translate('inventory_description')}: '
-                                      '${b.description?.isNotEmpty == true ? b.description : '-'}',
-                                    ),
-                                    Text(
-                                      '${local.translate('inventory_available')}: '
-                                      '${b.available ? local.translate('inventory_available') : local.translate('inventory_not_available')}',
-                                    ),
-                                    Text(
-                                      '${local.translate('inventory_damaged')}: '
-                                      '${b.damaged ? local.translate('inventory_damaged') : local.translate('inventory_not_damaged')}',
-                                    ),
-
-                                    const SizedBox(height: 12),
-
-                                    // Bottom right alignment for ownership info
-                                    Align(
-                                      alignment: Alignment.bottomRight,
-                                      child: Text(
-                                        b.shopOwned
-                                            ? local.translate(
-                                              'inventory_shop_owned',
-                                            )
-                                            : local.translate(
-                                              'inventory_customer_owned',
-                                            ),
                                       ),
-                                    ),
-                                  ],
+                                      // ─── Right: Surfboard Image ─────────────────────────────
+                                      SizedBox(
+                                        width: 120, // fixed width for the image
+                                        height: 120,
+                                        child: Builder(
+                                          builder: (_) {
+                                            final url = b.imageUrl;
+
+                                            // 1) No URL at all → placeholder
+                                            if (url == null || url.isEmpty) {
+                                              return Image.asset(
+                                                'assets/images/placeholder_board.png',
+                                                fit: BoxFit.fitHeight,
+                                              );
+                                            }
+
+                                            // 2) Remote URL → Image.network
+                                            if (url.startsWith('http')) {
+                                              return Image.network(
+                                                url,
+                                                fit: BoxFit.cover,
+                                              );
+                                            }
+
+                                            // 3) Local file path → only show if the file still exists
+                                            final file = File(url);
+                                            if (file.existsSync()) {
+                                              return Image.file(
+                                                file,
+                                                fit: BoxFit.cover,
+                                              );
+                                            }
+
+                                            // 4) Otherwise fall back to placeholder
+                                            return Image.asset(
+                                              'assets/images/placeholder_board.png',
+                                              fit: BoxFit.fitHeight,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                    ],
+                                  ),
                                 ),
                               ),
                             );

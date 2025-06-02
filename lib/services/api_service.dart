@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -5,16 +6,23 @@ import 'package:rent_and_repair_shop_flutter/models/bill_response.dart';
 import 'package:rent_and_repair_shop_flutter/models/surfboard.dart';
 import '../models/rental_response.dart';
 import '../models/repair_response.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class ApiService {
-  static final String baseUrl =
+  static String get baseUrl =>
       dotenv
           .env['API_URL']!; // 'https://rent-and-repair-shop-spring.onrender.com/api'; //'http://localhost:8080/api';
+
   double? _cachedDefaultRentalFee;
+  File? _pickedImage;
+  final picker = ImagePicker();
 
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
-  ApiService._internal();
+  ApiService._internal() {
+    print('▶️ Running with API_URL = ${dotenv.env['API_URL']}');
+  }
 
   Future<double?> fetchDefaultRentalFee({bool forceRefresh = false}) async {
     if (_cachedDefaultRentalFee != null && !forceRefresh) {
@@ -68,6 +76,10 @@ class ApiService {
     }
   }
 
+  // a broadcast stream for created rentals
+  static final _rentalCreatedCtrl = StreamController<void>.broadcast();
+  Stream<void> get onRentalCreated => _rentalCreatedCtrl.stream;
+
   Future<bool> createRental({
     required String name,
     required String contact,
@@ -84,7 +96,9 @@ class ApiService {
         'rentalFee': rentalFee,
       }),
     );
-    return response.statusCode == 200;
+    final ok = response.statusCode == 200;
+    if (ok) _rentalCreatedCtrl.add(null);
+    return ok;
   }
 
   Future<List<Surfboard>> fetchAvailableSurfboards() async {
@@ -208,6 +222,7 @@ class ApiService {
     required String name,
     String? description,
     String? sizeText,
+    String? imageUrl,
     required bool damaged,
     String? issue,
   }) async {
@@ -219,10 +234,49 @@ class ApiService {
         'name': name,
         'description': description,
         if (sizeText != null && sizeText.isNotEmpty) 'sizeText': sizeText,
+        if (imageUrl != null) 'imageUrl': imageUrl,
         'damaged': damaged,
         'issue': issue,
       }),
     );
     return response.statusCode == 200;
+  }
+
+  Future<String?> uploadImageToCloudinary(File image) async {
+    final isProd = dotenv.env['ENV'] == 'production';
+
+    if (!isProd) return null;
+
+    final cloudName = dotenv.env['CLOUDINARY_CLOUD_NAME'];
+    final uploadPreset = dotenv.env['CLOUDINARY_UPLOAD_PRESET'];
+
+    final uri = Uri.parse(
+      'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
+    );
+    final request =
+        http.MultipartRequest('POST', uri)
+          ..fields['upload_preset'] = uploadPreset!
+          ..files.add(await http.MultipartFile.fromPath('file', image.path));
+
+    final response = await request.send();
+    if (response.statusCode == 200) {
+      final resStr = await response.stream.bytesToString();
+      final resJson = jsonDecode(resStr);
+      return resJson['secure_url'];
+    } else {
+      print('❌ Cloudinary upload failed: ${response.statusCode}');
+      return null;
+    }
+  }
+
+  Future<void> _pickImage(Function setState) async {
+    final picked = await picker.pickImage(
+      source: ImageSource.camera,
+    ); // or .gallery
+    if (picked != null) {
+      setState(() {
+        _pickedImage = File(picked.path);
+      });
+    }
   }
 }

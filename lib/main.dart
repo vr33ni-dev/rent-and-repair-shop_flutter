@@ -5,12 +5,11 @@ import 'l10n/app_localizations.dart';
 import 'screens/home_page.dart';
 
 Future<void> main() async {
-  // Read FLAVOR from --dart-define, defaulting to 'local'
   const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'local');
-
-  // Load .env.local or .env.production or any other variant
+  print("🏷  FLAVOR='$flavor'");
   await dotenv.load(fileName: '.env.$flavor');
-
+  print("📦 Loaded keys: ${dotenv.env.keys.toList()}");
+  print("▶️ API_URL = ${dotenv.env['API_URL']}");
   runApp(const SurfShopApp());
 }
 
@@ -47,6 +46,7 @@ class _SurfShopAppState extends State<SurfShopApp> {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: HomePage(onLanguageChange: _changeLanguage),
+      // home: DashboardPage(),
     );
   }
 }

@@ -30,12 +30,25 @@ class _RentalsPageState extends State<RentalsPage> {
     super.initState();
     _cacheDefaultFee();
     // default to the last 30 days:
-    final now = DateTime.now();
-    _filterRange = DateTimeRange(
-      start: now.subtract(const Duration(days: 30)),
-      end: now,
-    );
+    _filterRange = calculateFilterRange();
     _loadData();
+  }
+
+  DateTimeRange calculateFilterRange({int days = 30}) {
+    final now = DateTime.now();
+
+    // 1) Today at midnight:
+    final todayStart = DateTime(now.year, now.month, now.day);
+
+    // 2) Start of the window: [days] ago from todayStart
+    final rangeStart = todayStart.subtract(Duration(days: days));
+
+    // 3) End of the window: tomorrow at midnight minus 1 microsecond
+    final rangeEnd = todayStart
+        .add(const Duration(days: 1))
+        .subtract(const Duration(microseconds: 1));
+
+    return DateTimeRange(start: rangeStart, end: rangeEnd);
   }
 
   Future<void> _cacheDefaultFee() async {
@@ -71,7 +84,7 @@ class _RentalsPageState extends State<RentalsPage> {
     final formKey = GlobalKey<FormState>();
     String? name, contact;
     Surfboard? chosenBoard;
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     await showDialog<void>(
       context: context,
@@ -185,7 +198,7 @@ class _RentalsPageState extends State<RentalsPage> {
     required DateTime rentedAt,
     required double dailyRate,
   }) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final dmgCtrl = TextEditingController();
     final repCtrl = TextEditingController();
     final feeCtrl = TextEditingController();
@@ -278,7 +291,7 @@ class _RentalsPageState extends State<RentalsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final df = DateFormat('dd/MM/yyyy');
 
     return Scaffold(
@@ -406,10 +419,12 @@ class _RentalsPageState extends State<RentalsPage> {
             child: FutureBuilder<List<RentalResponse>>(
               future: _rentals,
               builder: (ctx, snap) {
-                if (snap.connectionState == ConnectionState.waiting)
+                if (snap.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
-                if (snap.hasError)
+                }
+                if (snap.hasError) {
                   return Center(child: Text('❌ ${snap.error}'));
+                }
 
                 var list = snap.data ?? [];
 
@@ -513,7 +528,7 @@ class _RentalsPageState extends State<RentalsPage> {
                               const SizedBox(height: 8),
                               Text(
                                 '${loc.translate('rentals_fee')}: '
-                                '\$${r.rentalFee!.toStringAsFixed(2)}',
+                                '\$${r.rentalFee.toStringAsFixed(2)}',
                               ),
                             ],
                             const SizedBox(height: 12),
