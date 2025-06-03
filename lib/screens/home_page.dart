@@ -82,7 +82,7 @@ class HomePage extends StatelessWidget {
                     const SizedBox(height: 24),
                     const RecentActivityCard(),
                     const SizedBox(height: 16),
-                    const OverdueReturnsCard(),
+                    // const OverdueReturnsCard(),
                   ],
                 ),
               ),

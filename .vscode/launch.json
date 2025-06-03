@@ -30,7 +30,7 @@
       "args": ["--dart-define=FLAVOR=local"]
     },
           {
-      "name": "Flutter: Prod on Android (Debug)",
+      "name": "Flutter: Local on Android (Debug)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",

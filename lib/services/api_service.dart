@@ -196,6 +196,13 @@ class ApiService {
     }
   }
 
+  /// Deletes a surfboard by its ID. Returns true on success (200), false otherwise.
+  Future<bool> deleteSurfboard(String surfboardId) async {
+    final url = Uri.parse('$baseUrl/surfboards/$surfboardId');
+    final response = await http.delete(url);
+    return response.statusCode == 200;
+  }
+
   Future<List<BillResponse>> fetchBills() async {
     final response = await http.get(Uri.parse('$baseUrl/bills/all'));
 
