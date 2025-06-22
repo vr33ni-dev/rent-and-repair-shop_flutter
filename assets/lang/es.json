@@ -83,7 +83,11 @@
   "inventory_error_adding": "No se pudo agregar la tabla",
   "inventory_board_added": "✅ Tabla agregada",
     "inventory_take_photo": "Toma foto",
-
+  "inventory_board_deleted": "✅ Tabla eliminada",
+  "inventory_confirm_delete": "¿Estás seguro de que quieres eliminar esta tabla?",
+  "inventory_delete_message": "Esta acción no se puede deshacer.",
+  "delete": "Eliminar",
+  "inventory_error_deleting": "❌ No se pudo eliminar la tabla",
   "bills_title": "Todas las facturas",
   "bills_filters_title": "Filtros",
   "bills_filter_by_date": "Filtrar por fecha",

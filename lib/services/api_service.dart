@@ -11,8 +11,8 @@ import 'package:image_picker/image_picker.dart';
 
 class ApiService {
   static String get baseUrl =>
-      dotenv
-          .env['API_URL']!; // 'https://rent-and-repair-shop-spring.onrender.com/api'; //'http://localhost:8080/api';
+      dotenv.env['API_URL']!
+          .trim(); // 'https://rent-and-repair-shop-spring.onrender.com/api'; //'http://localhost:8080/api';
 
   double? _cachedDefaultRentalFee;
   File? _pickedImage;

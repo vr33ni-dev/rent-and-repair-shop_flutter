@@ -8,8 +8,10 @@ Future<void> main() async {
   const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'local');
   print("🏷  FLAVOR='$flavor'");
   await dotenv.load(fileName: '.env.$flavor');
-  print("📦 Loaded keys: ${dotenv.env.keys.toList()}");
   print("▶️ API_URL = ${dotenv.env['API_URL']}");
+  final rawUrl = dotenv.env['API_URL'] ?? '<<MISSING>>';
+  final apiUrl = rawUrl.trim();
+  debugPrint("▶️ [main] LOADED API_URL = <$apiUrl>");
   runApp(const SurfShopApp());
 }
 
