@@ -11,10 +11,10 @@ class ImagePreviewScreen extends StatelessWidget {
   final bool isNetwork;
 
   const ImagePreviewScreen({
-    Key? key,
+    super.key,
     required this.imagePath,
     required this.isNetwork,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

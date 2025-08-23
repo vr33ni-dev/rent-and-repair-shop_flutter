@@ -1,10 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:rent_and_repair_shop_flutter/services/api_service.dart';
-import 'package:rent_and_repair_shop_flutter/models/rental_response.dart';
-import 'package:rent_and_repair_shop_flutter/models/repair_response.dart';
-import 'package:rent_and_repair_shop_flutter/models/surfboard.dart';
-import 'package:rent_and_repair_shop_flutter/models/bill_response.dart';
 import 'package:rent_and_repair_shop_flutter/l10n/app_localizations.dart';
 
 class DashboardStats {

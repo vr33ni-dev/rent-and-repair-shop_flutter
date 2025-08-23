@@ -17,7 +17,7 @@ class _Activity {
 }
 
 class RecentActivityCard extends StatefulWidget {
-  const RecentActivityCard({Key? key}) : super(key: key);
+  const RecentActivityCard({super.key});
   @override
   State<RecentActivityCard> createState() => _RecentActivityCardState();
 }
@@ -83,7 +83,7 @@ class _RecentActivityCardState extends State<RecentActivityCard> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     return FutureBuilder<List<_Activity>>(
       future: _eventsFuture,

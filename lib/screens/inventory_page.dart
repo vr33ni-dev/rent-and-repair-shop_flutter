@@ -53,7 +53,7 @@ class _InventoryPageState extends State<InventoryPage> {
     final local = AppLocalizations.of(context);
 
     // Local flag to disable the entire dialog
-    bool _isSubmitting = false;
+    bool isSubmitting = false;
 
     Future<void> pickImage(StateSetter setSt) async {
       XFile? image = await picker.pickImage(source: ImageSource.camera);
@@ -74,7 +74,7 @@ class _InventoryPageState extends State<InventoryPage> {
             builder: (ctx, setSt) {
               // Wrap in AbsorbPointer so the entire dialog is non-interactive when submitting
               return AbsorbPointer(
-                absorbing: _isSubmitting,
+                absorbing: isSubmitting,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -165,18 +165,18 @@ class _InventoryPageState extends State<InventoryPage> {
                       actions: [
                         TextButton(
                           onPressed: () {
-                            if (!_isSubmitting) Navigator.of(ctx).pop();
+                            if (!isSubmitting) Navigator.of(ctx).pop();
                           },
                           child: Text(local.translate('cancel')),
                         ),
                         ElevatedButton(
                           onPressed:
-                              _isSubmitting
+                              isSubmitting
                                   ? null
                                   : () async {
                                     if (formKey.currentState!.validate()) {
                                       // Disable the dialog
-                                      setSt(() => _isSubmitting = true);
+                                      setSt(() => isSubmitting = true);
 
                                       formKey.currentState!.save();
                                       if (pickedImage != null) {
@@ -239,13 +239,13 @@ class _InventoryPageState extends State<InventoryPage> {
                     ),
 
                     // Semi-transparent overlay to “grey out” the dialog when submitting
-                    if (_isSubmitting)
+                    if (isSubmitting)
                       Positioned.fill(
                         child: Container(color: Colors.black.withOpacity(0.3)),
                       ),
 
                     // Centered loader spinner
-                    if (_isSubmitting) const CircularProgressIndicator(),
+                    if (isSubmitting) const CircularProgressIndicator(),
                   ],
                 ),
               );
@@ -501,8 +501,10 @@ class _InventoryPageState extends State<InventoryPage> {
                                                               child,
                                                               prog,
                                                             ) {
-                                                              if (prog == null)
+                                                              if (prog ==
+                                                                  null) {
                                                                 return child;
+                                                              }
                                                               return const Center(
                                                                 child:
                                                                     CircularProgressIndicator(),

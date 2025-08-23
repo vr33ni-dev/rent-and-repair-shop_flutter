@@ -30,7 +30,7 @@ class _StatData {
 }
 
 class DashboardOverview extends StatefulWidget {
-  const DashboardOverview({Key? key}) : super(key: key);
+  const DashboardOverview({super.key});
   @override
   State<DashboardOverview> createState() => _DashboardOverviewState();
 }
@@ -104,14 +104,15 @@ class _DashboardOverviewState extends State<DashboardOverview> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
-    final tabController = DefaultTabController.of(context)!;
+    final loc = AppLocalizations.of(context);
+    final tabController = DefaultTabController.of(context);
 
     return FutureBuilder<DashboardStats>(
       future: _statsFuture,
       builder: (ctx, snap) {
-        if (snap.connectionState == ConnectionState.waiting)
+        if (snap.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
+        }
         if (snap.hasError) return Center(child: Text('❌ ${snap.error}'));
 
         final d = snap.data!;
