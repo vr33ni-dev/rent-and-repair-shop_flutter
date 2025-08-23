@@ -14,24 +14,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Push branches & tags from GitHub → GitLab (skip HEAD, no force)
+      - name: Push branches & tags to GitLab (no hidden refs)
         env:
-          GITLAB_URL: ${{ secrets.GITLAB_URL }} # e.g. https://gitlab.com/<group>/<repo>.git
-          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }} # write_repository
+          GITLAB_URL: ${{ secrets.GITLAB_URL }} # HTTPS form
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
         run: |
-          set -euo pipefail
           git remote add gitlab "https://oauth2:${GITLAB_TOKEN}@${GITLAB_URL#https://}"
-
-          # Make sure we have the latest from GitHub
-          git fetch origin --prune --tags
-
-          # Push all tags (no force)
-          git push --prune gitlab refs/tags/*:refs/tags/* || true
-
-          # Push each origin branch to the same name on GitLab, skipping HEAD
-          while IFS= read -r b; do
-            echo "Pushing branch $b"
-            git push gitlab "refs/remotes/origin/${b}:refs/heads/${b}" || {
-              echo "::warning::Fast-forward failed for ${b} (diverged or protected). Skipping."
-            }
-          done < <(git for-each-ref --format='%(refname:strip=3)' refs/remotes/origin | grep -v '^HEAD$')
+          # Push branches, prune deleted ones, force updates if needed
+          git push --prune --atomic gitlab refs/heads/*:refs/heads/*
+          # Push tags (fast-forward only)
+          git push --prune --atomic gitlab refs/tags/*:refs/tags/*
