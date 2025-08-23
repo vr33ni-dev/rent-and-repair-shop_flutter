@@ -14,30 +14,27 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Mirror GitHub -> GitLab (force only default branch)
+      - name: Mirror default branch safely
         env:
-          GITLAB_URL: ${{ secrets.GITLAB_URL }} # https://gitlab.com/<group>/<repo>.git
-          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }} # PAT with write_repository
+          GITLAB_URL: ${{ secrets.GITLAB_URL }}
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
           DEF: ${{ github.event.repository.default_branch || 'master' }}
         run: |
           set -euo pipefail
-
-          # Add remote with token
           git remote add gitlab "https://oauth2:${GITLAB_TOKEN}@${GITLAB_URL#https://}"
-
-          # Make sure we have latest from GitHub
           git fetch origin --prune --tags
+          git fetch gitlab --prune || true
 
-          # 1) Force update the default branch on GitLab to match GitHub
-          #    Requires: Allowed to push = Developers (or you), and Allow force push = enabled for DEF
-          git push gitlab +refs/remotes/origin/${DEF}:refs/heads/${DEF}
+          SRC="refs/remotes/origin/${DEF}"
+          DST="refs/heads/${DEF}"
 
-          # 2) Push all other branches (fast-forward only), skipping HEAD and the default (already handled)
-          git for-each-ref --format='%(refname:strip=3)' refs/remotes/origin | grep -v '^HEAD$' | grep -v "^${DEF}$" | while read BR; do
-            echo "Pushing branch ${BR}"
-            git push gitlab "refs/remotes/origin/${BR}:refs/heads/${BR}" || \
-              echo "::warning::Fast-forward failed for ${BR}; skipping."
-          done
-
-          # 3) Push all tags (no force)
-          git push --prune gitlab refs/tags/*:refs/tags/* || true
+          if git rev-parse "refs/remotes/gitlab/${DEF}" >/dev/null 2>&1 \
+            && ! git merge-base --is-ancestor "refs/remotes/gitlab/${DEF}" "$SRC"; then
+            echo "::warning::${DEF} diverged or blocked; pushing to mirror/${DEF}."
+            git push gitlab "${SRC}:refs/heads/mirror/${DEF}"
+            # tags (no force)
+            git push --prune gitlab refs/tags/*:refs/tags/* || true
+          else
+            git push --prune gitlab "${SRC}:${DST}"
+            git push --prune gitlab refs/tags/*:refs/tags/* || true
+          fi
