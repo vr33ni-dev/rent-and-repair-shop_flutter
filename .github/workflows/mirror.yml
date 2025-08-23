@@ -14,27 +14,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Mirror default branch safely
+      - name: Push branches & tags to GitLab (no hidden refs)
         env:
-          GITLAB_URL: ${{ secrets.GITLAB_URL }}
+          GITLAB_URL: ${{ secrets.GITLAB_URL }} # HTTPS form
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
-          DEF: ${{ github.event.repository.default_branch || 'master' }}
         run: |
-          set -euo pipefail
           git remote add gitlab "https://oauth2:${GITLAB_TOKEN}@${GITLAB_URL#https://}"
-          git fetch origin --prune --tags
-          git fetch gitlab --prune || true
-
-          SRC="refs/remotes/origin/${DEF}"
-          DST="refs/heads/${DEF}"
-
-          if git rev-parse "refs/remotes/gitlab/${DEF}" >/dev/null 2>&1 \
-            && ! git merge-base --is-ancestor "refs/remotes/gitlab/${DEF}" "$SRC"; then
-            echo "::warning::${DEF} diverged or blocked; pushing to mirror/${DEF}."
-            git push gitlab "${SRC}:refs/heads/mirror/${DEF}"
-            # tags (no force)
-            git push --prune gitlab refs/tags/*:refs/tags/* || true
-          else
-            git push --prune gitlab "${SRC}:${DST}"
-            git push --prune gitlab refs/tags/*:refs/tags/* || true
-          fi
+          # Push branches, prune deleted ones, force updates if needed
+          git push --prune --atomic gitlab refs/heads/*:refs/heads/*
+          # Push tags (fast-forward only)
+          git push --prune --atomic gitlab refs/tags/*:refs/tags/*
