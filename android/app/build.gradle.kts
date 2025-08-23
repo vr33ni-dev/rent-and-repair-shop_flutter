@@ -28,6 +28,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        manifestPlaceholders["applicationLabel"] = "Clinica de Tablas"
     }
 
     buildTypes {
@@ -35,6 +37,19 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+    ndkVersion = "27.0.12077973"
+    flavorDimensions += "env"
+
+    productFlavors {
+        create("dev") {
+            dimension = "env"
+            applicationIdSuffix = ".local"
+            versionNameSuffix = "-dev"
+        }
+        create("prod") {
+            dimension = "env"
         }
     }
 }
