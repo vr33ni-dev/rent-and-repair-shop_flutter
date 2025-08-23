@@ -21,6 +21,6 @@ jobs:
         run: |
           git remote add gitlab "https://oauth2:${GITLAB_TOKEN}@${GITLAB_URL#https://}"
           # Push branches, prune deleted ones, force updates if needed
-          git push --prune gitlab +refs/heads/*:refs/heads/*
-          # Push tags, prune deleted ones too
-          git push --prune gitlab +refs/tags/*:refs/tags/*
+          git push --prune --atomic gitlab refs/heads/*:refs/heads/*
+          # Push tags (fast-forward only)
+          git push --prune --atomic gitlab refs/tags/*:refs/tags/*
