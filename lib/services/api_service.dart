@@ -1,18 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:rent_and_repair_shop_flutter/models/bill_response.dart';
 import 'package:rent_and_repair_shop_flutter/models/surfboard.dart';
+import '../env/env.dart';
 import '../models/rental_response.dart';
 import '../models/repair_response.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
 class ApiService {
-  static String get baseUrl =>
-      dotenv.env['API_URL']!
-          .trim(); // 'https://rent-and-repair-shop-spring.onrender.com/api'; //'http://localhost:8080/api';
+  static String get baseUrl => Env.apiUrl.trim();
 
   double? _cachedDefaultRentalFee;
   File? _pickedImage;
@@ -21,7 +19,7 @@ class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
   ApiService._internal() {
-    print('▶️ Running with API_URL = ${dotenv.env['API_URL']}');
+    print('▶️ Running with API_URL = ${Env.apiUrl}');
   }
 
   Future<double?> fetchDefaultRentalFee({bool forceRefresh = false}) async {
@@ -250,12 +248,12 @@ class ApiService {
   }
 
   Future<String?> uploadImageToCloudinary(File image) async {
-    final isProd = dotenv.env['ENV'] == 'production';
+    final isProd = Env.isProd;
 
     if (!isProd) return null;
 
-    final cloudName = dotenv.env['CLOUDINARY_CLOUD_NAME'];
-    final uploadPreset = dotenv.env['CLOUDINARY_UPLOAD_PRESET'];
+    final String cloudName = Env.cloudinaryCloudName;
+    final String uploadPreset = Env.cloudinaryUploadPreset;
 
     final uri = Uri.parse(
       'https://api.cloudinary.com/v1_1/$cloudName/image/upload',

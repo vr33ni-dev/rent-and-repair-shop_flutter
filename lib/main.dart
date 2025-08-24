@@ -1,17 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'l10n/app_localizations.dart';
-import 'screens/home_page.dart';
+import 'package:rent_and_repair_shop_flutter/l10n/app_localizations.dart';
+import 'package:rent_and_repair_shop_flutter/screens/home_page.dart';
+import 'env/env.dart';
 
 Future<void> main() async {
-  const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'local');
-  print("🏷  FLAVOR='$flavor'");
-  await dotenv.load(fileName: '.env.$flavor');
-  print("▶️ API_URL = ${dotenv.env['API_URL']}");
-  final rawUrl = dotenv.env['API_URL'] ?? '<<MISSING>>';
-  final apiUrl = rawUrl.trim();
-  debugPrint("▶️ [main] LOADED API_URL = <$apiUrl>");
+  WidgetsFlutterBinding.ensureInitialized();
+  debugPrint('ENV=${Env.env}  API_URL=${Env.apiUrl}');
+  assert(Env.apiUrl.isNotEmpty, 'Missing API_URL. Pass via --dart-define.');
   runApp(const SurfShopApp());
 }
 

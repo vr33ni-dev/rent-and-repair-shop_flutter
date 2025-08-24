@@ -2,15 +2,17 @@ name: Deploy Flutter Web to GitHub Pages
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
+
+permissions:
+  contents: write # needed for gh-pages push
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Flutter
@@ -18,13 +20,41 @@ jobs:
         with:
           channel: stable
 
-      - name: Build web
-        run: flutter build web
+      - name: Flutter pub get
+        run: flutter pub get
+
+      # OPTION A — pass defines from GitHub Secrets (recommended)
+      - name: Build (Flutter Web, production)
+        run: |
+          flutter build web --release \
+            --base-href "/${{ github.event.repository.name }}/" \
+            --dart-define=API_URL=${{ secrets.API_URL }} \
+            --dart-define=APP_NAME=ClinicaDeTablas \
+            --dart-define=CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }} \
+            --dart-define=CLOUDINARY_UPLOAD_PRESET=${{ secrets.CLOUDINARY_UPLOAD_PRESET }} \
+            --dart-define=ENV=production
+
+      # OPTION B — if you prefer a JSON file from secrets, uncomment:
+      # - name: Create env/production.json from secrets
+      #   run: |
+      #     mkdir -p env
+      #     cat > env/production.json <<'EOF'
+      #     {
+      #       "API_URL": "${{ secrets.API_URL }}",
+      #       "APP_NAME": "ClinicaDeTablas",
+      #       "CLOUDINARY_CLOUD_NAME": "${{ secrets.CLOUDINARY_CLOUD_NAME }}",
+      #       "CLOUDINARY_UPLOAD_PRESET": "${{ secrets.CLOUDINARY_UPLOAD_PRESET }}",
+      #       "ENV": "production"
+      #     }
+      #     EOF
+      # - name: Build (from file)
+      #   run: flutter build web --release --base-href "/${{ github.event.repository.name }}/" --dart-define-from-file=env/production.json
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GH_TOKEN }}
+          publish_branch: gh-pages
           publish_dir: build/web
-          # Uncomment below if you want to keep history
-          # keep_files: true
+          # If you use a custom domain:
+          # cname: example.com

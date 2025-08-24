@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:rent_and_repair_shop_flutter/env/env.dart';
 import '../l10n/app_localizations.dart';
 import '../services/api_service.dart';
 
@@ -58,7 +58,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
     final currentLang = Localizations.localeOf(context).languageCode;
-    final appName = dotenv.env['APP_NAME'] ?? 'SurfShop admin panel';
+    final appName = Env.appName;
 
     return Scaffold(
       appBar: AppBar(title: Text(loc.translate('settings_title'))),

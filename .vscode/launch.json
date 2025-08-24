@@ -2,15 +2,14 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Flutter: Prod on iPhone",
+      "name": "Flutter: Prod on iPhone (Release)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
       "flutterMode": "release",
-      "deviceId": "00008120-001210891178C01E", 
-      "args": ["--dart-define=FLAVOR=production"]
+      "deviceId": "00008120-001210891178C01E",
+      "args": ["--dart-define-from-file=env/production.json"]
     },
-
     {
       "name": "Flutter: Prod on iPhone 16 Plus (Simulator)",
       "request": "launch",
@@ -18,36 +17,34 @@
       "program": "lib/main.dart",
       "flutterMode": "debug",
       "deviceId": "3E1C4763-46FC-4A35-B997-27BAC20AF3D7",
-      "args": ["--dart-define=FLAVOR=production"]
+      "args": ["--dart-define-from-file=env/production.json"]
     },
-        {
+    {
       "name": "Flutter: Local on iPhone 16 Plus (Simulator)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
       "flutterMode": "debug",
       "deviceId": "3E1C4763-46FC-4A35-B997-27BAC20AF3D7",
-      "args": ["--dart-define=FLAVOR=local"]
+      "args": ["--dart-define-from-file=env/local.json"]
     },
-          {
+    {
       "name": "Flutter: Local on Android (Debug)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
       "flutterMode": "debug",
       "deviceId": "adb-AM4U9X4111G12779-2GkK97._adb-tls-connect._tcp",
-      "args": ["--dart-define=FLAVOR=production"]
+      "args": ["--dart-define-from-file=env/local.json"]
     },
-    
- {
+    {
       "name": "Flutter: Prod on Android (Release)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
       "flutterMode": "release",
       "deviceId": "YOUR_ANDROID_DEVICE_ID_HERE",
-      "args": ["--dart-define=FLAVOR=production"]
-    },
+      "args": ["--dart-define-from-file=env/production.json"]
+    }
   ]
-
 }

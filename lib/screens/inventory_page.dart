@@ -1,11 +1,9 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:rent_and_repair_shop_flutter/l10n/app_localizations.dart';
+import '../env/env.dart';
 import '../models/surfboard.dart';
 import '../services/api_service.dart';
 import 'package:rent_and_repair_shop_flutter/screens/image_preview_screen.dart';
@@ -180,8 +178,7 @@ class _InventoryPageState extends State<InventoryPage> {
 
                                       formKey.currentState!.save();
                                       if (pickedImage != null) {
-                                        final isProd =
-                                            dotenv.env['ENV'] == 'production';
+                                        final isProd = Env.isProd;
                                         if (isProd) {
                                           imageUrl = await ApiService()
                                               .uploadImageToCloudinary(
