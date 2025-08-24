@@ -1,0 +1,7 @@
+{
+  "API_URL": "http://localhost:8080/api",
+  "APP_NAME": "APP_NAME",
+  "CLOUDINARY_CLOUD_NAME": "unused",
+  "CLOUDINARY_UPLOAD_PRESET": "unused",
+  "ENV": "local"
+}
