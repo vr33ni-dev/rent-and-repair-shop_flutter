@@ -69,8 +69,6 @@ flutter:
   assets:
     - assets/lang/en.json
     - assets/lang/es.json
-    - .env.production
-    - .env.local
     - assets/images/placeholder_board.png
   # To add assets to your application, add an assets section, like this:
   # assets:
