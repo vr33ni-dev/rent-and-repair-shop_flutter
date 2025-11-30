@@ -4,4 +4,4 @@ A Flutter project.
 Since the backend currently runs on a free tier, it might take a while to load, when accessing the Github Pages URL.
 
 ---
-> **Note:** The canonical repository is [**on GitHub**](https://github.com/vr33ni-dev/rent-and-repair-shop_flutter) · [Mirror on GitLab →](https://gitlab.com/vr33ni-personal/rent-and-repair-shop_flutter) [![Mirror Status](https://github.com/vr33ni-dev/rent-and-repair-shop_flutter/actions/workflows/mirror.yml/badge.svg)](https://github.com/vr33ni-dev/rent-and-repair-shop_flutter/actions/workflows/mirror.yml)
+> **Note:** The canonical repository is [**on GitHub**](https://github.com/vr33ni-dev/rent-and-repair-shop_flutter) · [Mirror on GitLab →](https://gitlab.com/vr33ni-personal/rent-and-repair-shop_flutter) [![Mirror Status](https://github.com/vr33ni-dev/rent-and-repair-shop_flutter/actions/workflows/gitlab-mirror.yml/badge.svg)](https://github.com/vr33ni-dev/rent-and-repair-shop_flutter/actions/workflows/gitlab-mirror.yml)
